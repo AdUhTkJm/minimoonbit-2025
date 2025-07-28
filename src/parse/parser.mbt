@@ -61,6 +61,8 @@ pub fn Parser::check(self: Parser, ty: Token) -> Bool {
 }
 
 pub fn[T] Parser::die(self: Parser, msg: String) -> T {
+  // WARNING: When changing this, also change the shell script.
+  // It checks this fixed format.
   die("error: \{msg} (character: \{self.locs[self.place]})");
 }
 

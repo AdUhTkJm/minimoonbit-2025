@@ -6,3 +6,7 @@ target
 
 # IDE
 .vscode
+
+# Script generation
+err.txt
+out.txt

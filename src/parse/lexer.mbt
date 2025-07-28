@@ -11,8 +11,8 @@ pub fn Lexer::lex(self: Lexer) -> (Array[Token], Array[Int]) {
   let tokens = [];
   let locs = [];
   while (self.has_next()) {
-    tokens.push(self.next());
     locs.push(self.loc);
+    tokens.push(self.next());
   }
   return (tokens, locs);
 }
