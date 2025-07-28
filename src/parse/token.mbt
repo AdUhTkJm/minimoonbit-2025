@@ -25,7 +25,6 @@ pub(all) enum Token {
   EOF
 } derive(Show, Eq, Hash)
 
-
 pub fn Token::isa(self: Token, ty: Token) -> Bool {
   if (self == ty) {
     return true;

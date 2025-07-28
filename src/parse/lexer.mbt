@@ -7,12 +7,14 @@ pub fn Lexer::new(content: String) -> Lexer {
   { loc: 0, data: content.to_array() }
 }
 
-pub fn Lexer::lex(self: Lexer) -> Array[Token] {
+pub fn Lexer::lex(self: Lexer) -> (Array[Token], Array[Int]) {
   let tokens = [];
+  let locs = [];
   while (self.has_next()) {
     tokens.push(self.next());
+    locs.push(self.loc);
   }
-  return tokens;
+  return (tokens, locs);
 }
 
 pub fn Lexer::has_next(self: Lexer) -> Bool {
@@ -96,8 +98,13 @@ pub fn Lexer::next(self: Lexer) -> Token {
       }
       return Gt;
     }
+    '-' => {
+      if (self.check(">")) {
+        return Arrow;
+      }
+      return Sub;
+    }
     '+' => Add
-    '-' => Sub
     '*' => Mul
     '/' => Div
     '%' => Mod

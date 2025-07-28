@@ -1,10 +1,11 @@
 pub struct Parser {
   mut place: Int
   data: Array[Token]
+  locs: Array[Int]
 }
 
-pub fn Parser::new(data: Array[Token]) -> Parser {
-  { place: 0, data }
+pub fn Parser::new(data: Array[Token], locs: Array[Int]) -> Parser {
+  { place: 0, data, locs }
 }
 
 pub fn Parser::consume(self: Parser) -> Token {
@@ -59,10 +60,14 @@ pub fn Parser::check(self: Parser, ty: Token) -> Bool {
   return true;
 }
 
+pub fn[T] Parser::die(self: Parser, msg: String) -> T {
+  die("error: \{msg} (character: \{self.locs[self.place]})");
+}
+
 pub fn Parser::expect(self: Parser, ty: Token) -> Unit {
   let tok = self.consume();
   if (not(tok.isa(ty))) {
-    die("expected \{ty}, but got \{tok}");
+    self.die("expected \{ty}, but got \{tok}");
   }
 }
 
@@ -70,7 +75,7 @@ pub fn Parser::ident(self: Parser) -> String {
   match self.consume() {
     Ident(x) => x
     Wildcard => "_"
-    c => die("expected ident, but got \{c}")
+    c => self.die("expected ident, but got \{c}")
   }
 }
 
@@ -78,31 +83,45 @@ pub fn Parser::typename(self: Parser) -> String {
   match self.consume() {
     Typename(x) => x
     Wildcard => "_"
-    c => die("expected typename, but got \{c}")
+    c => self.die("expected typename, but got \{c}")
+  }
+}
+
+pub fn Parser::base_type(self: Parser) -> Type {
+  match self.consume() {
+    Int => Int
+    Bool => Bool
+    Unit => Unit
+    Double => Double
+    Typename(x) => Unresolved(x)
+    c => self.die("expected type, but got \{c}")
   }
 }
 
 pub fn Parser::read_type(self: Parser) -> Type {
-  ...
+  // TODO: more types
+  let ty = self.base_type();
+  return ty;
 }
 
 pub fn Parser::func(self: Parser, top~: Bool = false) -> AST {
   let name = self.ident();
   let args = [];
-  while (not(self.check(RPar))) {
+  let non_main = not(top && (name == "main"));
+  if (non_main) {
+    self.expect(LPar);
+  }
+  while (non_main && not(self.check(RPar))) {
     let name = self.ident();
-    let ty = if (self.check(Colon)) {
-      self.read_type()
-    } else {
-      Unknown
-    }
+    let ty = if (self.check(Colon)) { self.read_type() } else { Unknown }
     args.push((name, ty));
     if (not(self.peek().isa(RPar))) {
       self.expect(Comma);
     }
   }
+  let retTy = if (self.check(Arrow)) { self.read_type() } else { Unknown }
   let body = self.block();
-  Fn({ name, args, body })
+  Fn({ name, args, retTy, body })
 }
 
 pub fn Parser::block(self: Parser) -> AST {
@@ -121,7 +140,7 @@ pub fn Parser::primary(self: Parser) -> AST {
     True => Bool(true)
     False => Bool(false)
     Ident(x) => Var(x)
-    c => die("unexpected token \{c}")
+    c => self.die("unexpected token \{c}")
   }
 }
 
@@ -148,10 +167,9 @@ pub fn Parser::call(self: Parser) -> AST {
 pub fn Parser::_if(self: Parser) -> AST {
   if (self.check(If)) {
     let cond = self.expr();
-    let block = self.block();
-    if (self.check(Else)) {
-
-    }
+    let ifso = self.block();
+    let ifnot = if (self.check(Else)) { Some(self.block()) } else { None }
+    return If(cond, ifso, ifnot);
   }
   if (self.check(Match)) {
     ...
@@ -228,7 +246,9 @@ pub fn Parser::stmt(self: Parser) -> AST {
     Let => self._let();
     _ => {
       self.retrace();
-      return self.expr();
+      let expr = self.expr();
+      self.check(Semicolon) |> ignore;
+      return expr;
     }
   }
 }
@@ -252,11 +272,11 @@ pub fn Parser::toplevel(self: Parser) -> AST {
   match self.consume() {
     Let => self._let(top = true);
     Fn => self.func(top = true);
-    c => die("unexpected toplevel \{c}")
+    c => self.die("unexpected toplevel \{c}")
   }
 }
 
-pub fn Parser::program(self: Parser) -> Array[AST] {
+pub fn Parser::parse(self: Parser) -> Array[AST] {
   let result = [];
   while (not(self.peek().isa(EOF))) {
     result.push(self.toplevel());
