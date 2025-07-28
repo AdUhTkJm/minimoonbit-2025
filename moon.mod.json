@@ -1,0 +1,19 @@
+{
+  "name": "AdUhTkJm/minimbt",
+  "version": "0.1.0",
+  "deps": {
+    "moonbitlang/x": "0.4.30"
+  },
+  "readme": "README.md",
+  "repository": "https://github.com/AdUhTkJm/bitviewer",
+  "license": "GPL-3.0-or-later",
+  "keywords": [
+    "compiler",
+    "parser",
+    "codegen",
+    "optimize",
+    "ir"
+  ],
+  "description": "A mini-moonbit compiler for competition.",
+  "source": "src"
+}
