@@ -16,3 +16,5 @@ store
 gep
 get_global
 global
+int
+double

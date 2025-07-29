@@ -1,1 +1,1 @@
-typealias @utils.(Map, List, Node)
+typealias @utils.(List, Node)

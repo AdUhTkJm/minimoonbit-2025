@@ -5,8 +5,8 @@ pub(all) enum Attr {
 
 pub impl Show for Attr with output(self, logger) {
   let str = match self {
-    Int(x) => "\{x}"
-    Double(x) => "\{x}"
+    Int(x) => "<\{x}>"
+    Double(x) => "<\{x}>"
   }
   logger.write_string(str);
 }

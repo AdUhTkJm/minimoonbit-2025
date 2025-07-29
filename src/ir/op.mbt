@@ -3,11 +3,14 @@ pub struct Op {
   kind: OpType
   ty: Type?
   operands: Array[Op]
-  attrs: Map[String, Attr]
+  attrs: Array[Attr]
   regions: Array[Region]
 
   parent: Block?
   at: Node[Op]?
+
+  // We need a mutable multiset here. Unfortunately we don't have such thing in Moonbit.
+  mut users: Array[Op]
 }
 
 pub impl Eq for Op with op_equal(self, other) {
@@ -24,10 +27,10 @@ priv struct OpEnv {
 
 let openv: OpEnv = { cnt: 0 };
 
-pub fn Op::build(kind: OpType, ty: Type?, operands: Array[Op], attrs~: Map[String, Attr] = Map::new(), parent: Block?, at: Node[Op]?) -> Op {
+pub fn Op::build(kind: OpType, ty: Type?, operands: Array[Op], attrs~: Array[Attr] = [], parent: Block?, at: Node[Op]?) -> Op {
   let cnt = openv.cnt;
   openv.cnt += 1;
-  { id: cnt, kind, ty, operands, attrs, regions: [], parent, at }
+  { id: cnt, kind, ty, operands, attrs, regions: [], parent, at, users: [] }
 }
 
 ///|
@@ -53,19 +56,40 @@ pub fn Op::at(self: Op) -> Node[Op] {
   return self.at.unwrap();
 }
 
+pub fn Op::remove_user(self: Op, other: Op) -> Unit {
+  for i, user in self.users {
+    if (user == other) {
+      self.users = self.users[:i].to_array() + self.users[i+1:].to_array();
+      break;
+    }
+  }
+}
+
 ///|
 /// Removes self from parent.
 /// 
 pub fn Op::erase(self: Op) -> Unit {
+  for x in self.operands {
+    x.remove_user(self);
+  }
   self.parent().ops.erase(self.at());
 }
 
-pub impl Show for Op with output(self, logger) {
+pub fn Op::dump(self: Op, depth: Int) -> String {
   let ret = if (self.ty is None) { "" } else { "%\{self.id}: \{self.ty.unwrap()} = " }
   let operands = if (self.operands.is_empty()) { "" } else { " " + self.operands.map(_.to_string()).join(", ") }
-  let regions = if (self.regions.is_empty()) { "" }  else { " " + self.regions.map(_.to_string()).join("\n"); }
-  let attrs = if (self.attrs.size() == 0) { "" } else {
-    " " + self.attrs.to_array().map((x) => { let (k, v) = x; "<\{k}: \{v}>" }).join(" ");
-  }
-  logger.write_string("\{ret}\{self.kind}\{operands}\{attrs}\{regions}")
+  let regions = if (self.regions.is_empty()) { "" }  else { " " + self.regions.map(_.dump(depth + 1)).join(" "); }
+  let attrs = if (self.attrs.is_empty()) { "" } else { " " + self.attrs.map(_.to_string()).join(" "); }
+  let indent = String::make(2 * depth, ' ');
+  return "\{indent}\{ret}\{self.kind}\{operands}\{attrs}\{regions}";
+}
+
+pub impl Show for Op with output(self, logger) {
+  logger.write_string(self.dump(0));
+}
+
+pub fn Op::append_region(self: Op) -> Region {
+  let region = Region::new();
+  self.regions.push(region);
+  return region;
 }

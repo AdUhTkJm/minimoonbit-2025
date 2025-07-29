@@ -39,6 +39,10 @@ pub impl[T: Show] Show for List[T] with output(self, writer) {
   writer.write_string(self.to_string())
 }
 
+///|
+/// I still can't understand how this works.
+/// Looks still buggy.
+/// 
 pub fn[T] List::iter(self: List[T]) -> Iter[T] {
   return Iter::new(fn (x: (T) -> IterResult) -> IterResult {
     for c = self.begin; c != self.end; c = c.next.unwrap() {
@@ -95,6 +99,13 @@ pub fn[T] List::new() -> List[T] {
 /// 
 pub fn[T] Node::from(w: T) -> Node[T] {
   { w: () => w, next: None, prev: None }
+}
+
+///|
+/// Converts to array.
+/// 
+pub fn[T] List::to_array(self: List[T]) -> Array[T] {
+  Array::from_iter(self.iter());
 }
 
 ///|

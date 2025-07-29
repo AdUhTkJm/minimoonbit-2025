@@ -17,8 +17,8 @@ pub fn Block::new() -> Block {
 
 pub fn Block::dump(self: Block, depth: Int) -> String {
   guard depth >= 1;
-  let indent = String::make(depth * 2, ' ');
-  "\{indent}bb\{self.id}:\n" + self.ops.map(_.to_string()).join("\n")
+  let indent = String::make(depth * 2 - 2, ' ');
+  return "\{indent}bb\{self.id}:\n" + self.ops.to_array().map(_.dump(depth)).join("\n")
 }
 
 pub impl Show for Block with output(self, logger) {

@@ -19,6 +19,8 @@ pub(all) enum OpType {
   Gep
   GetGlobal
   Global
+  Int
+  Double
 } derive(Eq, Hash)
 
 pub impl Show for OpType with output(self, logger) {
@@ -41,6 +43,8 @@ pub impl Show for OpType with output(self, logger) {
     Gep => "gep"
     GetGlobal => "get_global"
     Global => "global"
+    Int => "int"
+    Double => "double"
   };
   logger.write_string(str);
 }
