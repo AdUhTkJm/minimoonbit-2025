@@ -2,9 +2,11 @@
 
 ## 运行方法
 
-对于一般的运行，实际上只需要 `moon run src/bin/main.mbt -- <program arguments>` 即可。
+这个编译器内有一部分代码是根据配置文件生成的。
 
-然而，为了方便调试，可以考虑使用 `make.sh`。目前支持的参数如下：
+在第一次运行前，需要使用 `make.sh`，无需添加参数。它会自动生成需要的代码。
+
+你也可以使用 `make.sh` 辅助调试。目前支持的参数如下：
 
 **test**
 
@@ -15,3 +17,7 @@
 **preserve**
 
 `-p` (`--preserve`): 在运行上述 .mbt 文件时，将 stderr 和 stdout 保留为 err.txt 和 out.txt。
+
+**rebuild**
+
+`-r` (`--rebuild`): 重新根据配置生成代码。

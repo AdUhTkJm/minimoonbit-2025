@@ -1,10 +1,5 @@
 #!/bin/zsh
 
-if [[ $# -eq 0 ]]; then
-  echo "warning: 'make.sh' does nothing without arguments"
-  exit 0
-fi
-
 while [[ $# -gt 0 ]]; do
   case $1 in
   -t|--test)
@@ -16,9 +11,36 @@ while [[ $# -gt 0 ]]; do
   -p|--preserve)
     # Preserves output files.
     preserve=1; shift 1;;
+  -r|--rebuild)
+    # Forces a rebuild.
+    rebuild=1; shift 1;;
   *) echo "unknown option $1"; exit 1;;
   esac
 done
+
+mkdir -p build
+
+# Detect file changes.
+timestamp=$(date +%s)
+cache=build/timestamp
+if [[ -f $cache ]]; then
+  last=$(cat $cache)
+  modified=$(find src/info -type f -newermt "@$last" | head -n 1)
+  if [[ -z $modified ]]; then
+    no_rebuild=1
+  fi
+fi
+echo $timestamp > $cache
+
+if [[ -n $rebuild ]]; then
+  unset no_rebuild
+fi
+
+# Rebuild.
+if [[ -z $no_rebuild ]]; then
+  # Read op_types.txt and generate op_types.mbt.
+  cat src/info/op_types.txt | python3 scripts/generate.py > src/ir/optype.mbt
+fi
 
 if [[ -n $testcase ]]; then
   out=out.txt

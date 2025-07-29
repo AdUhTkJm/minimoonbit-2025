@@ -3,7 +3,6 @@
   "import": [
     "moonbitlang/x/fs",
     "AdUhTkJm/minimbt/parse",
-    "AdUhTkJm/minimbt/utils",
     "moonbitlang/x/sys"
   ]
 }
