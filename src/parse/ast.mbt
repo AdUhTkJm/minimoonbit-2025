@@ -2,25 +2,25 @@ pub struct LetDetail {
   name: String
   init: AST
   ty: Type
-} derive(Show)
+} derive(Show, Hash, Eq)
 
 pub struct FnDetail {
   name: String
   args: Array[(String, Type)]
   retTy: Type
   body: AST
-} derive(Show)
+} derive(Show, Hash, Eq)
 
 pub struct StructDetail {
   name: String
   fields: Array[(String, Type)]
-} derive(Show)
+} derive(Show, Hash, Eq)
 
 pub enum BKind {
   And; Or
   Add; Sub; Mul; Div; Mod
   Lt; Le; Eq; Ne
-} derive(Show)
+} derive(Show, Hash, Eq)
 
 pub(all) enum AST {
   Int(Int)
@@ -34,9 +34,17 @@ pub(all) enum AST {
   Block(Array[AST])
   If(AST, AST, AST?)
   Struct(StructDetail)
-} derive(Show)
+} derive(Show, Hash, Eq)
 
-pub(all) struct TypedAST {
-  ast: AST
-  ty: Type
-} derive(Show)
+pub fn AST::walk(self: AST, f: (AST) -> Unit) -> Unit {
+  f(self);
+  match self {
+    Let({ init, .. }) => init.walk(f);
+    Fn({ body, .. }) => body.walk(f);
+    BinOp(_, x, y) => { x.walk(f); y.walk(f); }
+    Call(call, args) => { call.walk(f); args.each(_.walk(f)); }
+    Block(stmts) => { stmts.each(_.walk(f)); }
+    If(cond, ifso, ifnot) => { cond.walk(f); ifso.walk(f); if (ifnot is Some(x)) { x.walk(f); }; }
+    Struct(_) | Var(_) | Int(_) | Double(_) | Bool(_) => ()
+  }
+}

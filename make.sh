@@ -8,9 +8,9 @@ while [[ $# -gt 0 ]]; do
       echo "usage: make.sh -t <path to test file>"
     fi
     testcase=$2; shift 2;;
-  -p|--preserve)
-    # Preserves output files.
-    preserve=1; shift 1;;
+  --clean)
+    # Cleans test files.
+    clean=1; shift 1;;
   -r|--rebuild)
     # Forces a rebuild.
     rebuild=1; shift 1;;
@@ -43,6 +43,7 @@ if [[ -z $no_rebuild ]]; then
 fi
 
 if [[ -n $testcase ]]; then
+  testcase=$(find test -regextype posix-egrep -regex ".*$testcase(\.mbt)?")
   out=out.txt
   err=err.txt
   moon run src/bin/main.mbt -- "$testcase" > $out 2> $err
@@ -73,10 +74,13 @@ if [[ -n $testcase ]]; then
   fi
 
   if [[ $retval -ne 0 ]]; then
-    echo "panicked."
+    echo "panicked. program output:"
+    cat $out
   fi
 
-  if [[ -z $preserve ]]; then
+  if [[ -n $clean ]]; then
     rm $out $err
+    rm -rf temp
+    mkdir temp
   fi
 fi

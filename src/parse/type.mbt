@@ -3,7 +3,19 @@ pub(all) enum Type {
   Double
   Bool
   Unit
-  Unknown
   Unresolved(String)
   Weak(Int)
-} derive(Show)
+  Function(Type, Array[Type])
+} derive(Show, Hash, Eq)
+
+priv struct WeakCounter {
+  mut cnt: Int
+}
+
+fn WeakCounter::weak(self: WeakCounter) -> Type {
+  let cnt = self.cnt;
+  self.cnt += 1;
+  Weak(cnt);
+}
+
+let wenv: WeakCounter = { cnt: 0 };

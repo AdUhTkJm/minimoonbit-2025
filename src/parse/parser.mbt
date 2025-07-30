@@ -115,13 +115,16 @@ pub fn Parser::func(self: Parser, top~: Bool = false) -> AST {
   }
   while (non_main && not(self.check(RPar))) {
     let name = self.ident();
-    let ty = if (self.check(Colon)) { self.read_type() } else { Unknown }
+    let ty = if (self.check(Colon)) { self.read_type() } else { wenv.weak() }
     args.push((name, ty));
     if (not(self.peek().isa(RPar))) {
       self.expect(Comma);
     }
   }
-  let retTy = if (self.check(Arrow)) { self.read_type() } else { Unknown }
+  let mut retTy = if (self.check(Arrow)) { self.read_type() } else { wenv.weak() }
+  if (not(non_main)) {
+    retTy = Unit;
+  }
   let body = self.block();
   Fn({ name, args, retTy, body })
 }
@@ -142,7 +145,7 @@ pub fn Parser::primary(self: Parser) -> AST {
     True => Bool(true)
     False => Bool(false)
     Ident(x) => Var(x)
-    c => self.die("unexpected token \{c}")
+    c => self.die("unexpected primary token \{c}")
   }
 }
 
@@ -256,14 +259,10 @@ pub fn Parser::stmt(self: Parser) -> AST {
 }
 
 pub fn Parser::_let(self: Parser, top~: Bool = false) -> AST {
-  self.expect(Let);
   let name = self.ident();
   // We don't allow `name == '_'` in toplevel let.
   guard not(top) || name != "_";
-  let mut ty = Unknown;
-  if (self.check(Colon)) {
-    ty = self.read_type();
-  }
+  let ty = if (self.check(Colon)) { self.read_type() } else { wenv.weak() };
   self.expect(Assign);
   let init = self.expr();
   self.expect(Semicolon);

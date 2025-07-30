@@ -11,6 +11,7 @@ for
 while
 call
 alloca
+malloc
 load
 store
 gep
@@ -18,3 +19,5 @@ get_global
 global
 int
 double
+make_tuple
+get_item

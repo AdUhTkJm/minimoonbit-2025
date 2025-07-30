@@ -132,6 +132,7 @@ pub fn Lexer::next(self: Lexer) -> Token {
         "enum" => Enum
         "fn" => Fn
         "match" => Match
+        "let" => Let
         _ => Ident(str)
       }
     }

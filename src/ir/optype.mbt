@@ -14,6 +14,7 @@ pub(all) enum OpType {
   While
   Call
   Alloca
+  Malloc
   Load
   Store
   Gep
@@ -21,6 +22,8 @@ pub(all) enum OpType {
   Global
   Int
   Double
+  MakeTuple
+  GetItem
 } derive(Eq, Hash)
 
 pub impl Show for OpType with output(self, logger) {
@@ -38,6 +41,7 @@ pub impl Show for OpType with output(self, logger) {
     While => "while"
     Call => "call"
     Alloca => "alloca"
+    Malloc => "malloc"
     Load => "load"
     Store => "store"
     Gep => "gep"
@@ -45,6 +49,8 @@ pub impl Show for OpType with output(self, logger) {
     Global => "global"
     Int => "int"
     Double => "double"
+    MakeTuple => "make_tuple"
+    GetItem => "get_item"
   };
   logger.write_string(str);
 }
