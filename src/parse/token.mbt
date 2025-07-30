@@ -21,6 +21,8 @@ pub(all) enum Token {
   LPar; RPar; LBrak; RBrak; LBrace; RBrace
   Arrow; Colon; Semicolon; Comma; Dot
 
+  Struct;
+
   // Special
   EOF
 } derive(Show, Eq, Hash)
