@@ -11,6 +11,11 @@ pub struct FnDetail {
   body: AST
 } derive(Show)
 
+pub struct StructDetail {
+  name: String
+  fields: Array[(String, Type)]
+} derive(Show)
+
 pub enum BKind {
   And; Or
   Add; Sub; Mul; Div; Mod
@@ -28,6 +33,7 @@ pub(all) enum AST {
   Call(AST, Array[AST])
   Block(Array[AST])
   If(AST, AST, AST?)
+  Struct(StructDetail)
 } derive(Show)
 
 pub(all) struct TypedAST {

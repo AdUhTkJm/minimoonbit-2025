@@ -270,10 +270,31 @@ pub fn Parser::_let(self: Parser, top~: Bool = false) -> AST {
   Let({ name, ty, init })
 }
 
+pub fn Parser::struct_decl(self: Parser) -> AST {
+  self.expect(Struct);
+  let name = self.typename();  
+  let fields = [];
+  
+  self.expect(LBrace);
+  while (not(self.check(RBrace))) {
+    let field_name = self.ident();
+    self.expect(Colon);
+    let field_type = self.read_type();
+    fields.push((field_name, field_type));
+    
+    if (not(self.peek().isa(RBrace))) {
+      self.expect(Semicolon);
+    }
+  }
+  
+  return Struct({ name, fields });
+}
+
 pub fn Parser::toplevel(self: Parser) -> AST {
   match self.consume() {
     Let => self._let(top = true);
     Fn => self.func(top = true);
+    Struct => self.struct_decl();
     c => self.die("unexpected toplevel \{c}")
   }
 }
