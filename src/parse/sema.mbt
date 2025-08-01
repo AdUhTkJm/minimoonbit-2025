@@ -1,7 +1,7 @@
 pub struct TypingEnv {
-  map: Map[AST, Type]
+  mut map: Map[AST, Type]
   binding: Map[String, Type]
-  constraints: Map[Int, Type]
+  mut constraints: Set[(Int, Type)]
 }
 
 ///|
@@ -82,11 +82,15 @@ pub fn TypingEnv::dump(self: TypingEnv, ast: AST, depth: Int) -> String {
 }
 
 pub fn TypingEnv::new() -> TypingEnv {
-  { map: Map::new(), binding: Map::new(), constraints: Map::new() };
+  { map: Map::new(), binding: Map::new(), constraints: Set::new() };
 }
 
 pub fn TypingEnv::clone(self: TypingEnv) -> TypingEnv {
-  return { map: self.map.clone(), binding: self.binding.clone(), constraints: self.constraints.clone() };
+  {
+    map: self.map.clone(),
+    binding: self.binding.clone(),
+    constraints: self.constraints.iter() |> Set::from_iter
+  };
 }
 
 ///|
@@ -96,9 +100,7 @@ pub fn TypingEnv::join(self: TypingEnv, other: TypingEnv) -> Unit {
   for x in other.map {
     self.map[x.0] = x.1;
   }
-  for x in other.constraints {
-    self.constraints[x.0] = x.1;
-  }
+  self.constraints = self.constraints.union(other.constraints);
 }
 
 ///|
@@ -116,7 +118,7 @@ pub fn TypingEnv::unify(self: TypingEnv, x: Type, y: Type) -> Unit {
 
   match (x, y) {
     (Int, Int) | (Double, Double) | (Bool, Bool) | (Unit, Unit) => ()
-    (Weak(i), y) | (y, Weak(i)) => self.constraints[i] = y;
+    (Weak(i), y) | (y, Weak(i)) => self.constraints.add((i, y));
     (Function(ret, arg), Function(ret2, arg2)) => {
       self.unify(ret, ret2)
       guard arg.length() == arg2.length() else { die(); }
@@ -177,4 +179,42 @@ pub fn TypingEnv::infer(self: TypingEnv, x: AST) -> Type {
     x => die("unknown AST: \{x}")
   }
   return self[x];
+}
+
+fn TypingEnv::map(self: TypingEnv, f: (Type) -> Type) -> Unit {
+  let map = Map::new();
+  for t in self.map {
+    let (k, v) = t;
+    map[k] = v.map(f);
+  }
+  self.map = map;
+}
+
+pub fn TypingEnv::solve(self: TypingEnv, x: AST) -> AST {
+  // First, solve constraints.
+  let solution: Map[Int, Type] = Map::new();
+  for x in self.constraints {
+    let (i, ty) = x;
+    if (ty is Weak(j)) {
+      // Convert all Weak(i) to Weak(j).
+      self.map((x) => if (x is Weak(z) && z == i) { Weak(j) } else { x })
+    } else {
+      solution[i] = ty;
+    }
+  }
+  // Then map the solutions.
+  let mapper = (x) => if (x is Weak(z) && solution.contains(z)) { solution[z] } else { x };
+  self.map(mapper);
+  println(solution);
+  x.walk((x) => match x {
+    Fn(x) => {
+      x.retTy = mapper(x.retTy);
+      x.args = x.args.map((x) => (x.0, mapper(x.1)));
+    }
+    Let(x) => {
+      x.ty = mapper(x.ty);
+    }
+    _ => ()
+  });
+  return x;
 }

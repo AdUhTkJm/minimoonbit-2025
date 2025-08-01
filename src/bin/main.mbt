@@ -22,10 +22,12 @@ fn parse(args: Array[String]) -> Config {
 test {
   let content = (try? @fs.read_file_to_string("test/basic.mbt")).unwrap()
   let (tokens, locs) = @parse.Lexer::new(content).lex()
-  let ast = @parse.Parser::new(tokens, locs).parse() |> @parse.AST::Block;
+  let mut ast = @parse.Parser::new(tokens, locs).parse() |> @parse.AST::Block;
   let env = @parse.TypingEnv::new();
   env.infer(ast) |> ignore;
+  ast = env.solve(ast);
   println(env.dump(ast, 1));
+  println(env.constraints);
 }
 
 fn main {

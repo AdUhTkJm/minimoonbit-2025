@@ -1,17 +1,17 @@
-pub struct LetDetail {
+pub(all) struct LetDetail {
   name: String
   init: AST
-  ty: Type
+  mut ty: Type
 } derive(Show, Hash, Eq)
 
-pub struct FnDetail {
+pub(all) struct FnDetail {
   name: String
-  args: Array[(String, Type)]
-  retTy: Type
+  mut args: Array[(String, Type)]
+  mut retTy: Type
   body: AST
 } derive(Show, Hash, Eq)
 
-pub struct StructDetail {
+pub(all) struct StructDetail {
   name: String
   fields: Array[(String, Type)]
 } derive(Show, Hash, Eq)

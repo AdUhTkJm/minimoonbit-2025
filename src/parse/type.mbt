@@ -19,3 +19,10 @@ fn WeakCounter::weak(self: WeakCounter) -> Type {
 }
 
 let wenv: WeakCounter = { cnt: 0 };
+
+pub fn Type::map(self: Type, f: (Type) -> Type) -> Type {
+  (match self {
+    Function(t, arr) => Function(t.map(f), arr.map(_.map(f)));
+    c => c
+  }) |> f;
+}

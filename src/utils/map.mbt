@@ -1,5 +1,11 @@
 ///| A map that supports an unchecked `operator[]`.
-pub type Map[K,V](@builtin.Map[K,V]);
+pub type Map[K, V](@builtin.Map[K, V]);
+
+pub impl[K: Show, V: Show] Show for Map[K, V] with output(self, logger) {
+  let w = self.to_array().map((x) => "\{x.0}: \{x.1}").join(", ");
+  let str = "{ \{w} }";
+  logger.write_string(str);
+}
 
 pub fn[K: Eq + Hash, V] Map::new() -> Map[K, V] {
   return {};
@@ -25,23 +31,23 @@ pub fn[K: Eq + Hash, V] Map::remove(self: Map[K, V], x: K) -> Unit {
   self.inner().remove(x);
 }
 
-pub fn[K: Eq + Hash, V] Map::size(self: Map[K, V]) -> Int {
+pub fn[K, V] Map::size(self: Map[K, V]) -> Int {
   self.inner().size();
 }
 
-pub fn[K: Eq + Hash, V] Map::to_array(self: Map[K, V]) -> Array[(K, V)] {
+pub fn[K, V] Map::to_array(self: Map[K, V]) -> Array[(K, V)] {
   self.inner().to_array();
 }
 
-pub fn[K: Eq + Hash, V] Map::iter(self: Map[K, V]) -> Iter[(K, V)] {
+pub fn[K, V] Map::iter(self: Map[K, V]) -> Iter[(K, V)] {
   self.inner().iter();
 }
 
-pub fn[K: Eq + Hash, V] Map::keys(self: Map[K, V]) -> Array[K] {
+pub fn[K, V] Map::keys(self: Map[K, V]) -> Array[K] {
   self.to_array().map(fn (x) { x.0 })
 }
 
-pub fn[K: Eq + Hash, V] Map::values(self: Map[K, V]) -> Array[V] {
+pub fn[K, V] Map::values(self: Map[K, V]) -> Array[V] {
   self.to_array().map(fn (x) { x.1 })
 }
 
