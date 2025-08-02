@@ -12,7 +12,7 @@ pub fn Region::dump(self: Region, depth: Int) -> String {
   // If we don't to_array() here, this will run forever.
   // Why?
   let bbs = self.bbs.to_array().map(_.dump(depth)).join("\n");
-  return "\{indent}{\n\{bbs}\n\{indent}}"
+  return "{\n\{bbs}\n\{indent}}"
 }
 
 pub fn Region::new() -> Region {
@@ -23,4 +23,8 @@ pub fn Region::append_block(self: Region) -> Block {
   let block = Block::new();
   self.bbs.push_back(block);
   return block;
+}
+
+pub fn Region::block(self: Region) -> Block {
+  return self.bbs.begin.v();
 }

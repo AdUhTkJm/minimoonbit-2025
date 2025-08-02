@@ -1,7 +1,7 @@
 pub struct Op {
   id: Int
   kind: OpType
-  ty: Type?
+  ty: Type
   operands: Array[Op]
   attrs: Array[Attr]
   regions: Array[Region]
@@ -11,7 +11,7 @@ pub struct Op {
 
   // We need a mutable multiset here. Unfortunately we don't have such thing in Moonbit.
   mut users: Array[Op]
-}
+} derive(Default)
 
 pub impl Eq for Op with op_equal(self, other) {
   return self.id == other.id;
@@ -27,16 +27,10 @@ priv struct OpEnv {
 
 let openv: OpEnv = { cnt: 0 };
 
-pub fn Op::build(kind: OpType, ty: Type?, operands: Array[Op], attrs~: Array[Attr] = [], parent: Block?, at: Node[Op]?) -> Op {
+pub fn Op::build(kind: OpType, ty: Type, operands: Array[Op], attrs~: Array[Attr] = [], parent: Block?, at: Node[Op]?) -> Op {
   let cnt = openv.cnt;
   openv.cnt += 1;
   { id: cnt, kind, ty, operands, attrs, regions: [], parent, at, users: [] }
-}
-
-///|
-/// Gets the return type.
-pub fn Op::ty(self: Op) -> Type {
-  return self.ty.unwrap();
 }
 
 ///|
@@ -76,8 +70,8 @@ pub fn Op::erase(self: Op) -> Unit {
 }
 
 pub fn Op::dump(self: Op, depth: Int) -> String {
-  let ret = if (self.ty is None) { "" } else { "%\{self.id}: \{self.ty.unwrap()} = " }
-  let operands = if (self.operands.is_empty()) { "" } else { " " + self.operands.map(_.to_string()).join(", ") }
+  let ret = "%\{self.id}: \{self.ty} = "
+  let operands = if (self.operands.is_empty()) { "" } else { " " + self.operands.map((x) => "%\{x.id}").join(", ") }
   let regions = if (self.regions.is_empty()) { "" }  else { " " + self.regions.map(_.dump(depth + 1)).join(" "); }
   let attrs = if (self.attrs.is_empty()) { "" } else { " " + self.attrs.map(_.to_string()).join(" "); }
   let indent = String::make(2 * depth, ' ');
@@ -92,4 +86,8 @@ pub fn Op::append_region(self: Op) -> Region {
   let region = Region::new();
   self.regions.push(region);
   return region;
+}
+
+pub fn Op::region(self: Op) -> Region {
+  return self.regions[0];
 }

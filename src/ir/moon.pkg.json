@@ -4,5 +4,6 @@
     "AdUhTkJm/minimbt/parse"
   ],
   // Do not report keyword-reserved names.
-  "warn-list": "-35"
+  // Do not report deprecated functions.
+  "warn-list": "-35-2000"
 }

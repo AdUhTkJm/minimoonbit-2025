@@ -24,7 +24,19 @@ pub(all) enum OpType {
   Double
   MakeTuple
   GetItem
+  GetArg
+  MakeUnit
+  And
+  Or
+  Ne
+  Eq
+  Lt
+  Le
 } derive(Eq, Hash)
+
+pub impl Default for OpType with default() {
+  return Module;
+}
 
 pub impl Show for OpType with output(self, logger) {
   let str = match self {
@@ -51,6 +63,14 @@ pub impl Show for OpType with output(self, logger) {
     Double => "double"
     MakeTuple => "make_tuple"
     GetItem => "get_item"
+    GetArg => "get_arg"
+    MakeUnit => "make_unit"
+    And => "and"
+    Or => "or"
+    Ne => "ne"
+    Eq => "eq"
+    Lt => "lt"
+    Le => "le"
   };
   logger.write_string(str);
 }

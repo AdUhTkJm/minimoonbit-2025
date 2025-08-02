@@ -21,3 +21,11 @@ int
 double
 make_tuple
 get_item
+get_arg
+make_unit
+and
+or
+ne
+eq
+lt
+le

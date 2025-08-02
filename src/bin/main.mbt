@@ -27,6 +27,9 @@ test {
   env.infer(ast) |> ignore;
   ast = env.solve(ast);
   println(env.dump(ast, 1));
+  let cg = @ir.CodeGen::new(env);
+  let module = cg.build(ast);
+  println(module);
 }
 
 fn main {

@@ -2,7 +2,9 @@
   "is-main": true,
   "import": [
     "moonbitlang/x/fs",
+    "moonbitlang/x/sys",
     "AdUhTkJm/minimbt/parse",
-    "moonbitlang/x/sys"
-  ]
+    "AdUhTkJm/minimbt/ir"
+  ],
+  "warn-list": "-35-2000"
 }

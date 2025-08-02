@@ -48,8 +48,7 @@ for k, v in data.items():
           }}
         }}
         return false;
-      }}
-    """))
+      }}"""))
     continue
 
   fields = v["fields"]
@@ -76,8 +75,7 @@ for k, v in data.items():
         }}
       }}
       return false;
-    }}
-  """))
+    }}"""))
 
 # Now dump them.
 print("pub impl Show for Attr with output(self, logger) {\n  let str = match self {")

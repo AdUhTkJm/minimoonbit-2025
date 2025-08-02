@@ -11,7 +11,7 @@ pub fn Builder::new() -> Builder {
 /// Generates the top-level ModuleOp.
 /// 
 pub fn Builder::create_module() -> Op {
-  return Op::build(Module, None, [], None, None);
+  return Op::build(Module, unit, [], None, None);
 }
 
 ///|
@@ -29,7 +29,7 @@ pub fn Builder::at(self: Builder) -> Node[Op] {
 }
 
 pub fn Builder::create(self: Builder, kind: OpType, ty: Type, operands: Array[Op], attrs~: Array[Attr]=[]) -> Op {
-  let op = Op::build(kind, Some(ty), operands, attrs~, self.bb, self.at);
+  let op = Op::build(kind, ty, operands, attrs~, self.bb, self.at);
   self.block().ops.insert(self.at(), op);
   return op;
 }
@@ -41,32 +41,31 @@ pub fn Builder::creates(self: Builder, kind: OpType, ty: Type, operands: Array[O
   self.create(kind, ty, operands, attrs~) |> ignore;
 }
 
-pub fn Builder::before(self: Builder, op: Op) -> Unit {
+pub fn Builder::set_before(self: Builder, op: Op) -> Unit {
   self.at = op.at;
   self.bb = op.parent;
 }
 
-pub fn Builder::start(self: Builder, block: Block) -> Unit {
+pub fn Builder::set_to_start(self: Builder, block: Block) -> Unit {
   self.at = block.ops.begin |> Some;
   self.bb = block |> Some;
 }
 
-pub fn Builder::after(self: Builder, op: Op) -> Unit {
+pub fn Builder::set_after(self: Builder, op: Op) -> Unit {
   self.at = op.at().next;
   self.bb = op.parent;
 }
 
-pub fn Builder::end(self: Builder, block: Block) -> Unit {
+pub fn Builder::set_to_end(self: Builder, block: Block) -> Unit {
   self.at = block.ops.end |> Some;
   self.bb = block |> Some;
 }
 
-test {
-  let builder = Builder::new();
-  let unit = Builder::create_module();
-  let region = unit.append_region();
-  let block = region.append_block();
-  builder.start(block);
-  builder.creates(Int, i32, [], attrs=[Int(3)]);
-  println(unit);
+pub fn Builder::insertion_point(self: Builder) -> (Node[Op], Block) {
+  return (self.at(), self.block());
+}
+
+pub fn Builder::set_to(self: Builder, point: (Node[Op], Block)) -> Unit {
+  self.at = Some(point.0);
+  self.bb = Some(point.1);
 }

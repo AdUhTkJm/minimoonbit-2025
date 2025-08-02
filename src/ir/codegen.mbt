@@ -1,6 +1,7 @@
 pub struct SymbolTable {
   locals: Map[String, Op]
-  globals: Map[String, Op]
+  globals: Map[String, Type]
+  builder: Builder
 }
 
 pub fn SymbolTable::op_get(self: SymbolTable, name: String) -> Op {
@@ -10,7 +11,11 @@ pub fn SymbolTable::op_get(self: SymbolTable, name: String) -> Op {
   if (!self.globals.contains(name)) {
     die("unknown identifier: \{name}")
   }
-  return self.globals[name];
+  return self.builder.create(GetGlobal, self.globals[name], [], attrs=[Name(name)]);
+}
+
+pub fn SymbolTable::op_set(self: SymbolTable, name: String, addr: Op) -> Unit {
+  self.locals[name] = addr;
 }
 
 pub struct CodeGen {
@@ -18,30 +23,133 @@ pub struct CodeGen {
   symtbl: SymbolTable
   builder: Builder
   env: TypingEnv
+  mut init: Op
+}
+
+pub fn cvt(x: @parse.Type) -> Type {
+  match x {
+    Int => i32
+    Unit => unit
+    Double => f64
+    Function(x, arr) => Type::make("func", [cvt(x), ..arr.map(cvt(_))])
+    _ => die("unknown type \{x}")
+  }
+}
+
+pub fn CodeGen::clone(self: CodeGen) -> CodeGen {
+  let builder = Builder::new();
+  {
+    symtbl: { locals: self.symtbl.locals.clone(), globals: self.symtbl.globals.clone(), builder },
+    builder,
+    env: self.env,
+    init: self.init
+  }
 }
 
 pub fn CodeGen::new(env: TypingEnv) -> CodeGen {
+  let builder = Builder::new();
   {
-    symtbl: { locals: Map::new(), globals: Map::new() },
-    builder: Builder::new(), env
+    symtbl: { locals: Map::new(), globals: Map::new(), builder },
+    builder, env, init: Op::default()
   }
 }
 
 pub fn CodeGen::stmt(self: CodeGen, x: AST) -> Op {
   let builder = self.builder;
   match x {
-    Fn(detail) => {
-      let f = builder.create(Func, unit, [], attrs=[ArgCount(detail.args.length())]);
-      ...
+    Block(arr) => {
+      // Create a scope.
+      let subgen = self.clone();
+      subgen.builder.set_to(builder.insertion_point());
+      let last = arr.map(subgen.stmt(_)).last();
+      if (last is Some(x)) {
+        return x;
+      }
+      return builder.create(MakeUnit, unit, []);
     }
-    _ => die("unknown stmt: \{x}")
+    BinOp(kind, l, r) => {
+      if (kind is And) {
+        die("&&: NYI")
+      }
+      if (kind is Or) {
+        die("||: NYI");
+      }
+      let l = self.stmt(l);
+      let r = self.stmt(r);
+      let (kind, ty) = match kind {
+        Add => (Add, l.ty)
+        Sub => (Sub, l.ty)
+        Mul => (Mul, l.ty)
+        Div => (Div, l.ty)
+        Mod => (Mod, l.ty)
+        Ne => (Ne, bool)
+        Eq => (Eq, bool)
+        Lt => (Lt, bool)
+        Le => (Le, bool)
+        _ => panic()
+      }
+      return builder.create(kind, ty, [l, r])
+    }
+    Let({ name, init, ty }) => {
+      let addr = builder.create(Alloca, cvt(ty).ptr(), [], attrs=[Name(name)]);
+      self.symtbl[name] = addr;
+      let value = self.stmt(init);
+      builder.creates(Store, unit, [value, addr]);
+      return builder.create(MakeUnit, unit, []);
+    }
+    Call(func, args) => {
+      let func = self.stmt(func);
+      let args = args.map(self.stmt(_));
+      return builder.create(Call, self.env[x] |> cvt, [func, ..args]);
+    }
+    Var(name) => {
+      let addr = self.symtbl[name];
+      return builder.create(Load, self.env[x] |> cvt, [addr]);
+    }
+    Int(x) => builder.create(Int, i32, [], attrs=[Int(x)]);
+    Double(x) => builder.create(Double, i32, [], attrs=[Double(x)]);
+    _ => die("unknown statement: \{x}")
+  }
+}
+
+pub fn CodeGen::top(self: CodeGen, x: AST) -> Unit {
+  let builder = self.builder;
+  match x {
+    Fn(detail) => {
+      let f = builder.create(Func, unit, [], attrs=[ArgCount(detail.args.length()), Name(detail.name)]);
+      let region = f.append_region();
+      let block = region.append_block();
+      let subgen = self.clone();
+      self.symtbl.globals[detail.name] = cvt(Function(detail.retTy, detail.args.map((x) => x.1)));
+      subgen.builder.set_to_start(block);
+      for i, x in detail.args {
+        subgen.symtbl[x.0] = subgen.builder.create(GetArg, cvt(x.1).ptr(), [], attrs=[Int(i)]);
+      }
+      subgen.stmt(detail.body) |> ignore;
+    }
+    Let({ name, init, ty }) => {
+      let addr = builder.create(Global, cvt(ty).ptr(), [], attrs=[Name(name)]);
+      self.symtbl.globals[name] = ty |> cvt;
+      let point = builder.insertion_point();
+      builder.set_to_end(self.init.region().block());
+      let value = self.stmt(init);
+      builder.creates(Store, unit, [value, addr]);
+      builder.set_to(point);
+    }
+    _ => die("unknown toplevel: \{x}")
   }
 }
 
 pub fn CodeGen::build(self: CodeGen, x: AST) -> Op {
   let module = Builder::create_module();
   let region = module.append_region();
-  self.builder.start(region.append_block());
-  self.stmt(x) |> ignore;
+  self.builder.set_to_start(region.append_block());
+  // Create an __init() function.
+  self.init = self.builder.create(Func, unit, [], attrs=[Name("__init")]);
+  self.init.append_region() |> ignore;
+  guard x is Block(arr);
+  for x in arr {
+    self.top(x);
+  }
   module
 }

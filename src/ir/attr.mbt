@@ -25,7 +25,6 @@ pub fn Op::has_int(self: Op) -> Bool {
   return false;
 }
 
-
 pub fn Op::double(self: Op) -> Double {
   for x in self.attrs {
     if (x is Double(_0)) {
@@ -43,7 +42,6 @@ pub fn Op::has_double(self: Op) -> Bool {
   }
   return false;
 }
-
 
 pub fn Op::arg_count(self: Op) -> Int {
   for x in self.attrs {
@@ -63,7 +61,6 @@ pub fn Op::has_arg_count(self: Op) -> Bool {
   return false;
 }
 
-
 pub fn Op::from(self: Op) -> Array[Block] {
   for x in self.attrs {
     if (x is From(_0)) {
@@ -81,7 +78,6 @@ pub fn Op::has_from(self: Op) -> Bool {
   }
   return false;
 }
-
 
 pub fn Op::name(self: Op) -> String {
   for x in self.attrs {
@@ -101,7 +97,6 @@ pub fn Op::has_name(self: Op) -> Bool {
   return false;
 }
 
-
 pub fn Op::impure(self: Op) -> Bool {
   for x in self.attrs {
     if (x is Impure) {
@@ -110,7 +105,6 @@ pub fn Op::impure(self: Op) -> Bool {
   }
   return false;
 }
-
 pub impl Show for Attr with output(self, logger) {
   let str = match self {
     Int(_0) => "<\{_0}>"
