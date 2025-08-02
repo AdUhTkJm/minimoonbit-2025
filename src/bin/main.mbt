@@ -27,7 +27,6 @@ test {
   env.infer(ast) |> ignore;
   ast = env.solve(ast);
   println(env.dump(ast, 1));
-  println(env.constraints);
 }
 
 fn main {

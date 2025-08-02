@@ -28,13 +28,13 @@ pub impl Typable for String with overload(self) {
 pub fn[T: Typable] TypingEnv::op_get(self: TypingEnv, k: T) -> Type {
   match k.overload() {
     AST(x) => {
-      if (not(self.map.contains(x))) {
+      if (!self.map.contains(x)) {
         die("AST not inferred: \{x}")
       }
       return self.map[x];
     }
     String(x) => {
-      if (not(self.binding.contains(x))) {
+      if (!self.binding.contains(x)) {
         die("unknown name: \{x}")
       }
       return self.binding[x];

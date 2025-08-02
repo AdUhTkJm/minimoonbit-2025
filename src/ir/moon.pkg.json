@@ -1,5 +1,8 @@
 {
   "import": [
-    "AdUhTkJm/minimbt/utils"
-  ]
+    "AdUhTkJm/minimbt/utils",
+    "AdUhTkJm/minimbt/parse"
+  ],
+  // Do not report keyword-reserved names.
+  "warn-list": "-35"
 }

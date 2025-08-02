@@ -38,8 +38,8 @@ fi
 
 # Rebuild.
 if [[ -z $no_rebuild ]]; then
-  # Read op_types.txt and generate op_types.mbt.
-  cat src/info/op_types.txt | python3 scripts/generate.py > src/ir/optype.mbt
+  cat src/info/op-types.txt | python3 scripts/op-type-gen.py > src/ir/optype.mbt
+  cat src/info/attrs.yaml | python3 scripts/attr-gen.py > src/ir/attr.mbt
 fi
 
 if [[ -n $testcase ]]; then

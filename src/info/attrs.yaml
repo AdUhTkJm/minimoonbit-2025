@@ -1,0 +1,22 @@
+int:
+  fields: Int
+  format: "<$0>"
+
+double:
+  fields: Double
+  format: "<$0>"
+
+arg_count:
+  fields: Int
+  format: "<count = $0>"
+
+from:
+  fields: Array[Block]
+  format: "<from = $0>"
+
+name:
+  fields: String
+  format: "<name = $0>"
+
+impure:
+  tag: true

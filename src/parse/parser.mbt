@@ -53,7 +53,7 @@ pub fn Parser::retrace(self: Parser) -> Unit {
 
 pub fn Parser::check(self: Parser, ty: Token) -> Bool {
   let old = self.place;
-  if (not(self.consume().isa(ty))) {
+  if (!self.consume().isa(ty)) {
     self.place = old;
     return false;
   }
@@ -68,7 +68,7 @@ pub fn[T] Parser::die(self: Parser, msg: String) -> T {
 
 pub fn Parser::expect(self: Parser, ty: Token) -> Unit {
   let tok = self.consume();
-  if (not(tok.isa(ty))) {
+  if (!tok.isa(ty)) {
     self.die("expected \{ty}, but got \{tok}");
   }
 }
@@ -109,20 +109,20 @@ pub fn Parser::read_type(self: Parser) -> Type {
 pub fn Parser::func(self: Parser, top~: Bool = false) -> AST {
   let name = self.ident();
   let args = [];
-  let non_main = not(top && (name == "main"));
+  let non_main = !top || name != "main";
   if (non_main) {
     self.expect(LPar);
   }
-  while (non_main && not(self.check(RPar))) {
+  while (non_main && !self.check(RPar)) {
     let name = self.ident();
     let ty = if (self.check(Colon)) { self.read_type() } else { wenv.weak() }
     args.push((name, ty));
-    if (not(self.peek().isa(RPar))) {
+    if (!self.peek().isa(RPar)) {
       self.expect(Comma);
     }
   }
   let mut retTy = if (self.check(Arrow)) { self.read_type() } else { wenv.weak() }
-  if (not(non_main)) {
+  if (!non_main) {
     retTy = Unit;
   }
   let body = self.block();
@@ -132,7 +132,7 @@ pub fn Parser::func(self: Parser, top~: Bool = false) -> AST {
 pub fn Parser::block(self: Parser) -> AST {
   self.expect(LBrace);
   let stmts = []
-  while (not(self.check(RBrace))) {
+  while (!self.check(RBrace)) {
     stmts.push(self.stmt())
   }
   return Block(stmts);
@@ -155,9 +155,9 @@ pub fn Parser::call(self: Parser) -> AST {
     match self.consume() {
       LPar => {
         let args = [];
-        while (not(self.check(RPar))) {
+        while (!self.check(RPar)) {
           args.push(self.expr());
-          if (not(self.peek().isa(RPar))) {
+          if (!self.peek().isa(RPar)) {
             self.expect(Comma);
           }
         }
@@ -177,7 +177,7 @@ pub fn Parser::_if(self: Parser) -> AST {
     return If(cond, ifso, ifnot);
   }
   if (self.check(Match)) {
-    ...
+    // TODO
   }
   return self.call();
 }
@@ -261,7 +261,7 @@ pub fn Parser::stmt(self: Parser) -> AST {
 pub fn Parser::_let(self: Parser, top~: Bool = false) -> AST {
   let name = self.ident();
   // We don't allow `name == '_'` in toplevel let.
-  guard not(top) || name != "_";
+  guard !top || name != "_";
   let ty = if (self.check(Colon)) { self.read_type() } else { wenv.weak() };
   self.expect(Assign);
   let init = self.expr();
@@ -275,13 +275,13 @@ pub fn Parser::struct_decl(self: Parser) -> AST {
   let fields = [];
   
   self.expect(LBrace);
-  while (not(self.check(RBrace))) {
+  while (!self.check(RBrace)) {
     let field_name = self.ident();
     self.expect(Colon);
     let field_type = self.read_type();
     fields.push((field_name, field_type));
     
-    if (not(self.peek().isa(RBrace))) {
+    if (!self.peek().isa(RBrace)) {
       self.expect(Semicolon);
     }
   }
@@ -300,7 +300,7 @@ pub fn Parser::toplevel(self: Parser) -> AST {
 
 pub fn Parser::parse(self: Parser) -> Array[AST] {
   let result = [];
-  while (not(self.peek().isa(EOF))) {
+  while (!self.peek().isa(EOF)) {
     result.push(self.toplevel());
   }
   return result;

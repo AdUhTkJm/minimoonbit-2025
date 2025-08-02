@@ -1,6 +1,5 @@
 import sys
 
-# Converts a snake_case to CamelCase.
 def camel(x: str):
   return ''.join(word.title() for word in x.split('_'))
 
