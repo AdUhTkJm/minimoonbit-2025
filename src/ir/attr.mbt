@@ -1,3 +1,5 @@
+// Auto generated. Do not edit!
+
 pub(all) enum Attr {
   Int(Int)
   Double(Double)

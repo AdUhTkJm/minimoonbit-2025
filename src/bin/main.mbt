@@ -1,24 +1,3 @@
-struct Config {
-  mut input: String
-  mut output: String
-} derive(Default)
-
-fn parse(args: Array[String]) -> Config {
-  // Note that args[0] is the path to the executable, and should be ignored.
-  let mut i = 1;
-  let config = Config::default();
-  while (i < args.length()) {
-    if (args[i] == "-o") {
-      config.output = args[i + 1];
-      i += 2;
-      continue;
-    }
-    config.input = args[i];
-    i += 1;
-  }
-  return config;
-}
-
 fn compile(filename: String) -> Unit {
   let content = (try? @fs.read_file_to_string(filename)).unwrap()
   let (tokens, locs) = @parse.Lexer::new(content).lex()
@@ -29,6 +8,8 @@ fn compile(filename: String) -> Unit {
   println(env.dump(ast, 1));
   let cg = @ir.CodeGen::new(env);
   let module = cg.build(ast);
+  // let pm = opt(module);
+  // pm.run();
   println(module);
 }
 
@@ -37,7 +18,7 @@ test {
 }
 
 fn main {
-  let config = parse(@sys.get_cli_args());
+  @utils.parse(@sys.get_cli_args());
   compile(config.input);
   ignore(config.output);
 }

@@ -40,6 +40,8 @@ fi
 if [[ -z $no_rebuild ]]; then
   cat src/info/op-types.txt | python3 scripts/op-type-gen.py > src/ir/optype.mbt
   cat src/info/attrs.yaml | python3 scripts/attr-gen.py > src/ir/attr.mbt
+  cat src/info/passes.yaml | python3 scripts/pass-def-gen.py > src/opt/passes.mbt
+  cat src/info/passes.yaml | python3 scripts/pass-pipeline-gen.py > src/bin/pipeline.mbt
 fi
 
 if [[ -n $testcase ]]; then

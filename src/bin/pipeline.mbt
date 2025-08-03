@@ -1,0 +1,7 @@
+// Auto generated. Do not edit!
+
+pub fn opt(module: @ir.Op) -> @opt.PassManager {
+  let pm = @opt.PassManager::new(module);
+  pm.add(@opt.create_flatten(module));
+  return pm;
+}

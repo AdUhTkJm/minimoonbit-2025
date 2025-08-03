@@ -21,6 +21,14 @@ pub impl[T] Eq for Node[T] with op_equal(self, other) {
   physical_equal(self, other)
 }
 
+pub fn[T] Node::next(self: Node[T]) -> Node[T] {
+  return self.next.unwrap();
+}
+
+pub fn[T] Node::prev(self: Node[T]) -> Node[T] {
+  return self.prev.unwrap();
+}
+
 pub impl[T: Show] Show for List[T] with to_string(self) {
   if (self.empty()) {
     return "[]";

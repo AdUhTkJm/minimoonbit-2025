@@ -1,5 +1,6 @@
-pub struct Region {
+pub(all) struct Region {
   bbs: List[Block]
+  mut parent: Op
 }
 
 pub impl Show for Region with output(self, logger) {
@@ -17,16 +18,36 @@ pub fn Region::dump(self: Region, depth: Int) -> String {
   return "{\n\{bbs}\n\{indent}}"
 }
 
-pub fn Region::new() -> Region {
-  { bbs: List::new() }
+pub fn Region::new(parent: Op) -> Region {
+  { bbs: List::new(), parent }
 }
 
 pub fn Region::append_block(self: Region) -> Block {
-  let block = Block::new();
+  let block = Block::new(self, self.bbs.end);
   self.bbs.push_back(block);
+  block.at = self.bbs.end.prev();
   return block;
 }
 
 pub fn Region::block(self: Region) -> Block {
   return self.bbs.begin.v();
 }
+
+pub fn Region::iter(self: Region) -> Iter[Block] {
+  return self.bbs.iter();
+}
+
+pub fn Region::insert(self: Region, bb: Block) -> Block {
+  let block = Block::new(self, self.bbs.end);
+  self.bbs.insert(bb.at, block);
+  block.at = bb.at.prev();
+  return block;
+}
+
+pub fn Region::insert_after(self: Region, bb: Block) -> Block {
+  let block = Block::new(self, self.bbs.end);
+  self.bbs.insert(bb.at.next(), block);
+  block.at = bb.at.next();
+  return block;
+}
+

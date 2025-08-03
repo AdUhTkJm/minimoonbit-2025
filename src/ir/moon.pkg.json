@@ -5,5 +5,5 @@
   ],
   // Do not report keyword-reserved names.
   // Do not report deprecated functions.
-  "warn-list": "-35-2000"
+  "warn-list": "-35"
 }

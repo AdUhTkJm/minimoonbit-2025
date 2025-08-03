@@ -4,7 +4,9 @@
     "moonbitlang/x/fs",
     "moonbitlang/x/sys",
     "AdUhTkJm/minimbt/parse",
-    "AdUhTkJm/minimbt/ir"
+    "AdUhTkJm/minimbt/ir",
+    "AdUhTkJm/minimbt/utils",
+    "AdUhTkJm/minimbt/opt"
   ],
-  "warn-list": "-35-2000"
+  "warn-list": "-35"
 }

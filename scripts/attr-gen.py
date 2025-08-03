@@ -6,7 +6,7 @@ def camel(x: str):
   return ''.join(word.title() for word in x.split('_'))
 
 def die(msg: str):
-  print(msg)
+  print(msg, file=sys.stderr)
   exit(1)
 
 def canonicalize(k, v):
@@ -24,6 +24,8 @@ def canonicalize(k, v):
   return { "tag": False, "fields": fields, "format": v["format"] }
 
 data: dict = yaml.safe_load(sys.stdin)
+
+print("// Auto generated. Do not edit!\n")
 
 # First, generate a definition.
 data = { k: canonicalize(k, v) for k, v in data.items() }

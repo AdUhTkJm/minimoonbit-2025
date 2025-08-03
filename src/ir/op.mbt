@@ -1,4 +1,4 @@
-pub struct Op {
+pub(all) struct Op {
   id: Int
   kind: OpType
   ty: Type
@@ -6,8 +6,8 @@ pub struct Op {
   attrs: Array[Attr]
   regions: Array[Region]
 
-  parent: Block?
-  at: Node[Op]?
+  mut parent: Block?
+  mut at: Node[Op]?
 
   // We need a mutable multiset here. Unfortunately we don't have such thing in Moonbit.
   mut users: Array[Op]
@@ -83,11 +83,53 @@ pub impl Show for Op with output(self, logger) {
 }
 
 pub fn Op::append_region(self: Op) -> Region {
-  let region = Region::new();
+  let region = Region::new(self);
   self.regions.push(region);
   return region;
 }
 
 pub fn Op::region(self: Op) -> Region {
   return self.regions[0];
+}
+
+pub fn Op::block(self: Op) -> Block {
+  return self.region().block();
+}
+
+pub fn Op::isa(self:Op, kind: OpType) -> Bool {
+  return self.kind == kind;
+}
+
+pub fn Op::is_any(self: Op, kinds: Array[OpType]) -> Bool {
+  return @utils.any(kinds, self.isa(_));
+}
+
+pub fn Op::move_to_end(self: Op, bb: Block) -> Unit {
+  self.parent().ops.erase(self.at());
+  bb.ops.push_back(self);
+  self.parent = Some(bb);
+  self.at = bb.end().prev() |> Some;
+}
+
+pub fn Op::move_to_start(self: Op, bb: Block) -> Unit {
+  self.parent().ops.erase(self.at());
+  bb.ops.insert(bb.begin(), self);
+  self.parent = Some(bb);
+  self.at = bb.begin() |> Some;
+}
+
+pub fn Op::move_before(self: Op, other: Op) -> Unit {
+  self.parent().ops.erase(self.at());
+  let bb = other.parent();
+  bb.ops.insert(other.at(), self);
+  self.parent = Some(bb);
+  self.at = other.at().prev() |> Some;
+}
+
+pub fn Op::move_after(self: Op, other: Op) -> Unit {
+  self.parent().ops.erase(self.at());
+  let bb = other.parent();
+  bb.ops.insert(other.at().next(), self);
+  self.parent = Some(bb);
+  self.at = other.at().next() |> Some;
 }
