@@ -1,6 +1,7 @@
 pub(all) struct List[T] {
   mut begin: Node[T]
   mut end: Node[T]
+  mut sz: Int
 };
 
 pub(all) struct Node[T] {
@@ -91,7 +92,7 @@ pub fn[T: Show] List::join(self: List[T], sep: String) -> String {
 /// 
 pub fn[T] List::new() -> List[T] {
   let sentinel = { w: () => { panic() }, next: None, prev: None };
-  { begin: sentinel, end: sentinel }
+  { begin: sentinel, end: sentinel, sz: 0 }
 }
 
 ///|
@@ -124,6 +125,7 @@ pub fn[T] List::insert(self: List[T], it: Node[T], v: T) -> Unit {
   }
   
   it.prev = Some(new);
+  self.sz += 1;
 }
 
 ///|
@@ -133,6 +135,7 @@ pub fn[T] List::erase(self: List[T], it: Node[T]) -> Unit {
   if (self.begin == it && it.next.unwrap() == self.end) {
     self.begin = self.end;
     self.end.prev = None;
+    self.sz -= 1;
     return;
   }
   
@@ -152,6 +155,7 @@ pub fn[T] List::erase(self: List[T], it: Node[T]) -> Unit {
   // Clean up the removed node
   it.next = None;
   it.prev = None;
+  self.sz -= 1;
 }
 
 ///|
@@ -163,6 +167,7 @@ pub fn[T] List::push_back(self: List[T], v: T) -> Unit {
     new.next = Some(self.end);
     self.end.prev = Some(new);
     self.begin = new;
+    self.sz += 1;
     return;
   }
 
@@ -171,4 +176,12 @@ pub fn[T] List::push_back(self: List[T], v: T) -> Unit {
 
 pub fn[T] List::empty(self: List[T]) -> Bool {
   return self.begin == self.end;
+}
+
+pub fn[T] List::size(self: List[T]) -> Int {
+  return self.sz;
+}
+
+pub fn[T] List::length(self: List[T]) -> Int {
+  return self.sz;
 }

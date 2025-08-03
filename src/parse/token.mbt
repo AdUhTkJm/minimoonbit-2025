@@ -8,6 +8,7 @@ pub(all) enum Token {
 
   // Keywords
   Not; If; Else; Fn; Let; Struct; Enum; Match
+  While; Mut
 
   // Names
   Typename(String); Ident(String); Wildcard // _
@@ -15,6 +16,7 @@ pub(all) enum Token {
   // Operators
   Eq; Ne; Gt; Ge; Lt; Le;
   Add; Sub; Mul; Div; Mod; Assign;
+  AddEq; SubEq; MulEq; DivEq; ModEq
   And; Or
 
   // Punctuation

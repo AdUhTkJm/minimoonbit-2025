@@ -4,6 +4,11 @@ pub struct SymbolTable {
   builder: Builder
 }
 
+// Mimics Python's ast module.
+pub enum Ctx {
+  Load; Store
+}
+
 pub fn SymbolTable::op_get(self: SymbolTable, name: String) -> Op {
   if (self.locals.contains(name)) {
     return self.locals[name];
@@ -24,6 +29,13 @@ pub struct CodeGen {
   builder: Builder
   env: TypingEnv
   mut init: Op
+}
+
+///|
+/// Retrieves the IR-type of an AST.
+/// 
+pub fn CodeGen::op_get(self: CodeGen, x: AST) -> Type {
+  return self.env[x] |> cvt;
 }
 
 pub fn cvt(x: @parse.Type) -> Type {
@@ -54,7 +66,7 @@ pub fn CodeGen::new(env: TypingEnv) -> CodeGen {
   }
 }
 
-pub fn CodeGen::stmt(self: CodeGen, x: AST) -> Op {
+pub fn CodeGen::stmt(self: CodeGen, x: AST, ctx~: Ctx = Load) -> Op {
   let builder = self.builder;
   match x {
     Block(arr) => {
@@ -100,14 +112,62 @@ pub fn CodeGen::stmt(self: CodeGen, x: AST) -> Op {
     Call(func, args) => {
       let func = self.stmt(func);
       let args = args.map(self.stmt(_));
-      return builder.create(Call, self.env[x] |> cvt, [func, ..args]);
+      return builder.create(Call, self[x], [func, ..args]);
     }
     Var(name) => {
       let addr = self.symtbl[name];
-      return builder.create(Load, self.env[x] |> cvt, [addr]);
+      if (ctx is Store) {
+        return addr;
+      }
+      return builder.create(Load, self[x], [addr]);
     }
     Int(x) => builder.create(Int, i32, [], attrs=[Int(x)]);
     Double(x) => builder.create(Double, i32, [], attrs=[Double(x)]);
+    Assign(tgt, value) => {
+      let addr = self.stmt(tgt, ctx=Store);
+      let value = self.stmt(value);
+      builder.creates(Store, unit, [value, addr]);
+      return builder.create(MakeUnit, unit, []);
+    }
+    CompoundAssign(bkind, tgt, value) => {
+      let addr = self.stmt(tgt, ctx=Store);
+      let value = self.stmt(value);
+      let load = builder.create(Load, self[tgt], [addr]);
+      let modif = builder.create(match bkind {
+        Add => Add; Sub => Sub; Mul => Mul; Div => Div; Mod => Mod;
+        _ => panic()
+      }, self[tgt], [load, value]);
+      builder.creates(Store, unit, [modif, addr]);
+      return builder.create(MakeUnit, unit, []);
+    }
+    While(cond, body) => {
+      let cond = self.stmt(cond);
+      let _while = builder.create(While, unit, [cond]);
+      let region = _while.append_region();
+      let block = region.append_block();
+      let point = builder.insertion_point();
+      builder.set_to_start(block);
+      self.stmt(body) |> ignore;
+      builder.set_to(point);
+      return _while;
+    }
+    If(cond, ifso, ifnot) => {
+      let cond = self.stmt(cond);
+      let _if = builder.create(If, self[x], [cond]);
+      let region = _if.append_region();
+      let block = region.append_block();
+      let point = builder.insertion_point();
+      builder.set_to_start(block);
+      self.stmt(ifso) |> ignore;
+      if (ifnot is Some(ifnot)) {
+        let region = _if.append_region();
+        let block = region.append_block();
+        builder.set_to_start(block);
+        self.stmt(ifnot) |> ignore;
+      }
+      builder.set_to(point);
+      return _if;
+    }
     _ => die("unknown statement: \{x}")
   }
 }

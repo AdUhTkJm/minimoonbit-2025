@@ -77,6 +77,21 @@ pub fn TypingEnv::dump(self: TypingEnv, ast: AST, depth: Int) -> String {
       let args = args.map(self.dump(_, depth)).join(", ");
       "\{self.dump(func, depth)}(\{args})"
     }
+    While(cond, body) => {
+      "while (\{self.dump(cond, depth)}) \{self.dump(body, depth)}"
+    }
+    If(cond, ifso, ifnot) => {
+      let ifnot = if (ifnot is Some(ifnot)) { self.dump(ifnot, depth) } else { "" }
+      "if (\{self.dump(cond, depth)}) \{self.dump(ifso, depth)} \{ifnot}"
+    }
+    Assign(l, r) => "\{self.dump(l, depth)} = \{self.dump(r, depth)}"
+    CompoundAssign(kind, l, r) => {
+      let op = match kind {
+        Add => "+"; Sub => "-"; Mul => "*"; Div => "/"; Mod => "%"
+        _ => panic();
+      }
+      "\{self.dump(l, depth)} \{op}= \{self.dump(r, depth)}"
+    }
     x => die("unknown dumped ast \{x}")
   }
 }
@@ -150,10 +165,7 @@ pub fn TypingEnv::infer(self: TypingEnv, x: AST) -> Type {
       let rty = self.infer(r);
       self.unify(lty, rty);
       let ty: Type = match kind {
-        Lt | Le | Ne | Eq => {
-          self.unify(lty, Bool);
-          Bool
-        }
+        Lt | Le | Ne | Eq => Bool
         _ => rty
       }
       self[x] = ty;
@@ -176,7 +188,29 @@ pub fn TypingEnv::infer(self: TypingEnv, x: AST) -> Type {
       self[x] = ret;
     }
     Var(name) => self[x] = self[name];
-    x => die("unknown AST: \{x}")
+    While(cond, body) => {
+      self.unify(self.infer(cond), Bool);
+      self.unify(self.infer(body), Unit);
+      self[x] = Unit;
+    }
+    If(cond, ifso, ifnot) => {
+      self.unify(self.infer(cond), Bool);
+      self.unify(self.infer(ifso), Unit);
+      if (ifnot is Some(ifnot)) {
+        self.unify(self.infer(ifnot), Unit);
+      }
+      self[x] = Unit;
+    }
+    Assign(l, r) => {
+      self.unify(self.infer(l), self.infer(r));
+      self[x] = Unit;
+    }
+    CompoundAssign(_, l, r) => {
+      self.unify(self.infer(l), Int);
+      self.unify(self.infer(r), Int);
+      self[x] = Unit;
+    }
+    x => die("sema: unknown AST: \{x}")
   }
   return self[x];
 }
@@ -205,7 +239,7 @@ pub fn TypingEnv::solve(self: TypingEnv, x: AST) -> AST {
   // Then map the solutions.
   let mapper = (x) => if (x is Weak(z) && solution.contains(z)) { solution[z] } else { x };
   self.map(mapper);
-  println(solution);
+  
   x.walk((x) => match x {
     Fn(x) => {
       x.retTy = mapper(x.retTy);

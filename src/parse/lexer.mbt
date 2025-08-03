@@ -98,16 +98,39 @@ pub fn Lexer::next(self: Lexer) -> Token {
       }
       return Gt;
     }
+    '+' => {
+      if (self.check("=")) {
+        return AddEq;
+      }
+      return Add;
+    }
     '-' => {
       if (self.check(">")) {
         return Arrow;
       }
+      if (self.check("=")) {
+        return SubEq;
+      }
       return Sub;
     }
-    '+' => Add
-    '*' => Mul
-    '/' => Div
-    '%' => Mod
+    '*' => {
+      if (self.check("=")) {
+        return MulEq;
+      }
+      return Mul;
+    }
+    '/' => {
+      if (self.check("=")) {
+        return DivEq;
+      }
+      return Div;
+    }
+    '%' => {
+      if (self.check("=")) {
+        return ModEq;
+      }
+      return Mod;
+    }
     '(' => LPar
     ')' => RPar
     '[' => LBrak
@@ -133,6 +156,8 @@ pub fn Lexer::next(self: Lexer) -> Token {
         "fn" => Fn
         "match" => Match
         "let" => Let
+        "while" => While
+        "mut" => Mut
         _ => Ident(str)
       }
     }

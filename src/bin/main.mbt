@@ -19,8 +19,8 @@ fn parse(args: Array[String]) -> Config {
   return config;
 }
 
-test {
-  let content = (try? @fs.read_file_to_string("test/basic.mbt")).unwrap()
+fn compile(filename: String) -> Unit {
+  let content = (try? @fs.read_file_to_string(filename)).unwrap()
   let (tokens, locs) = @parse.Lexer::new(content).lex()
   let mut ast = @parse.Parser::new(tokens, locs).parse() |> @parse.AST::Block;
   let env = @parse.TypingEnv::new();
@@ -32,13 +32,12 @@ test {
   println(module);
 }
 
+test {
+  compile("test/basic.mbt")
+}
+
 fn main {
   let config = parse(@sys.get_cli_args());
-  let content = (try? @fs.read_file_to_string(config.input)).unwrap()
-  let (tokens, locs) = @parse.Lexer::new(content).lex()
-  let ast = @parse.Parser::new(tokens, locs).parse() |> @parse.AST::Block;
-  let env = @parse.TypingEnv::new();
-  env.infer(ast) |> ignore;
-  println(env.dump(ast, 1));
-  ignore(config.output); // TODO
+  compile(config.input);
+  ignore(config.output);
 }

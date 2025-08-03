@@ -145,6 +145,24 @@ pub fn Parser::primary(self: Parser) -> AST {
     True => Bool(true)
     False => Bool(false)
     Ident(x) => Var(x)
+    LPar => {
+      if (self.check(RPar)) {
+        return Unit;
+      }
+      let expr = self.expr();
+      if (self.check(Comma)) {
+        let arr = [expr];
+        while (!self.check(RPar)) {
+          arr.push(self.expr());
+          if (!self.peek().isa(RPar)) {
+            self.expect(Comma);
+          }
+        }
+        return Tuple(arr);
+      }
+      self.expect(RPar);
+      return expr;
+    }
     c => self.die("unexpected primary token \{c}")
   }
 }
@@ -245,13 +263,33 @@ pub fn Parser::expr(self: Parser) -> AST {
   return self.or();
 }
 
+pub fn Parser::_while(self: Parser) -> AST {
+  let cond = self.expr();
+  let body = self.block();
+  return While(cond, body);
+}
+
 pub fn Parser::stmt(self: Parser) -> AST {
   match self.consume() {
     Fn => self.func();
     Let => self._let();
+    While => self._while();
     _ => {
       self.retrace();
-      let expr = self.expr();
+      let mut expr = self.expr();
+      if (self.peek().is_any([Assign, AddEq, SubEq, MulEq, DivEq, ModEq])) {
+        let op = self.consume();
+        let r = self.expr();
+        expr = match op {
+          Assign => Assign(expr, r);
+          AddEq => CompoundAssign(Add, expr, r);
+          SubEq => CompoundAssign(Sub, expr, r);
+          MulEq => CompoundAssign(Mul, expr, r);
+          DivEq => CompoundAssign(Div, expr, r);
+          ModEq => CompoundAssign(Mod, expr, r);
+          _ => panic()
+        }
+      }
       self.check(Semicolon) |> ignore;
       return expr;
     }
@@ -259,6 +297,7 @@ pub fn Parser::stmt(self: Parser) -> AST {
 }
 
 pub fn Parser::_let(self: Parser, top~: Bool = false) -> AST {
+  self.check(Mut) |> ignore;
   let name = self.ident();
   // We don't allow `name == '_'` in toplevel let.
   guard !top || name != "_";

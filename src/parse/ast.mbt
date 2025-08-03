@@ -34,6 +34,12 @@ pub(all) enum AST {
   Block(Array[AST])
   If(AST, AST, AST?)
   Struct(StructDetail)
+  While(AST, AST)
+  Return(AST?)
+  Assign(AST, AST)
+  CompoundAssign(BKind, AST, AST)
+  Unit
+  Tuple(Array[AST])
 } derive(Show, Hash, Eq)
 
 pub fn AST::walk(self: AST, f: (AST) -> Unit) -> Unit {
@@ -41,10 +47,11 @@ pub fn AST::walk(self: AST, f: (AST) -> Unit) -> Unit {
   match self {
     Let({ init, .. }) => init.walk(f);
     Fn({ body, .. }) => body.walk(f);
-    BinOp(_, x, y) => { x.walk(f); y.walk(f); }
+    BinOp(_, x, y) | While(x, y) | Assign(x, y) | CompoundAssign(_, x, y) => { x.walk(f); y.walk(f); }
     Call(call, args) => { call.walk(f); args.each(_.walk(f)); }
-    Block(stmts) => { stmts.each(_.walk(f)); }
+    Tuple(arr) | Block(arr) => { arr.each(_.walk(f)); }
     If(cond, ifso, ifnot) => { cond.walk(f); ifso.walk(f); if (ifnot is Some(x)) { x.walk(f); }; }
-    Struct(_) | Var(_) | Int(_) | Double(_) | Bool(_) => ()
+    Return(ret) => if (ret is Some(ret)) { ret.walk(f); }
+    Struct(_) | Var(_) | Int(_) | Double(_) | Bool(_) | Unit => ()
   }
 }

@@ -74,9 +74,9 @@ if [[ -n $testcase ]]; then
   fi
 
   if [[ $retval -ne 0 ]]; then
-    echo "panicked. program output:"
-    cat $out
+    echo "panicked."
   fi
+  cat $out
 
   if [[ -n $clean ]]; then
     rm $out $err
