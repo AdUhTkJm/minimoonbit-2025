@@ -1,7 +1,7 @@
 pub(all) struct Type {
   name: String
   subtypes: Array[Type]
-} derive(Default)
+} derive(Default, Eq, Hash)
 
 pub impl Show for Type with output(self, logger) {
   logger.write_string("\{self.name}");

@@ -191,7 +191,7 @@ pub fn CodeGen::top(self: CodeGen, x: AST) -> Unit {
       let addr = builder.create(Global, cvt(ty).ptr(), [], attrs=[Name(name)]);
       self.symtbl.globals[name] = ty |> cvt;
       let point = builder.insertion_point();
-      builder.set_to_end(self.init.region().block());
+      builder.set_to_end(self.init.block());
       let value = self.stmt(init);
       builder.creates(Store, unit, [value, addr]);
       builder.set_to(point);
@@ -206,7 +206,8 @@ pub fn CodeGen::build(self: CodeGen, x: AST) -> Op {
   self.builder.set_to_start(region.append_block());
   // Create an __init() function.
   self.init = self.builder.create(Func, unit, [], attrs=[Name("__init")]);
-  self.init.append_region() |> ignore;
+  let region = self.init.append_region();
+  region.append_block() |> ignore;
   guard x is Block(arr);
   for x in arr {
     self.top(x);

@@ -5,11 +5,13 @@ fn compile(filename: String) -> Unit {
   let env = @parse.TypingEnv::new();
   env.infer(ast) |> ignore;
   ast = env.solve(ast);
-  println(env.dump(ast, 1));
+  if (config.dump_ast) {
+    println(env.dump(ast, 1));
+  }
   let cg = @ir.CodeGen::new(env);
   let module = cg.build(ast);
-  // let pm = opt(module);
-  // pm.run();
+  let pm = opt(module);
+  pm.run();
   println(module);
 }
 

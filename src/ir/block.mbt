@@ -17,7 +17,7 @@ pub fn Block::new(parent: Region, at: Node[Block]) -> Block {
   { id, ops: List::new(), parent, at }
 }
 
-pub fn Block::dump(self: Block, depth: Int, with_tag~: Bool=false) -> String {
+pub fn Block::dump(self: Block, depth: Int, with_tag~: Bool=true) -> String {
   guard depth >= 1;
   let indent = String::make(depth * 2 - 2, ' ');
   return (if (with_tag) { "\{indent}bb\{self.id}:\n" } else { "" }) + self.ops.to_array().map(_.dump(depth)).join("\n")
@@ -55,8 +55,18 @@ pub fn Block::end(self: Block) -> Node[Op] {
 pub fn Block::split_at(self: Block, at: Node[Op]) -> Block {
   let region = self.parent;
   let bb = region.insert_after(self);
-  for it = at; it != self.end(); it = it.next() {
-    at.v().move_to_end(bb);
+  let mut it = at;
+  while it != self.end() {
+    let next = it.next();
+    it.v().move_to_end(bb);
+    it = next;
   }
   return bb;
+}
+
+///|
+/// Create a copy of `self.ops`.
+/// 
+pub fn Block::ops(self: Block) -> List[Op] {
+  return self.ops.to_array() |> List::from_array;
 }

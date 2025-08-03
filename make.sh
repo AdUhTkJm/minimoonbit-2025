@@ -14,6 +14,8 @@ while [[ $# -gt 0 ]]; do
   -r|--rebuild)
     # Forces a rebuild.
     rebuild=1; shift 1;;
+  -w|--with-type)
+    withtype="--types"; shift 1;;
   *) echo "unknown option $1"; exit 1;;
   esac
 done
@@ -48,7 +50,7 @@ if [[ -n $testcase ]]; then
   testcase=$(find test -regextype posix-egrep -regex ".*$testcase(\.mbt)?")
   out=out.txt
   err=err.txt
-  moon run src/bin/main.mbt -- "$testcase" > $out 2> $err
+  moon run src/bin/main.mbt -- "$testcase" $withtype > $out 2> $err
   retval=$?
 
   errpos=$(sed -En 's/.*error: .*\(character: ([0-9]+)\)/\1/p' $out)

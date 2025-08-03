@@ -7,6 +7,8 @@ pub(all) enum Attr {
   From(Array[Block])
   Name(String)
   Impure
+  Target(Block)
+  Else(Block)
 }
 
 pub fn Op::int(self: Op) -> Int {
@@ -107,6 +109,42 @@ pub fn Op::impure(self: Op) -> Bool {
   }
   return false;
 }
+
+pub fn Op::target(self: Op) -> Block {
+  for x in self.attrs {
+    if (x is Target(_0)) {
+      return (_0);
+    }
+  }
+  die("no attribute 'target'");
+}
+
+pub fn Op::has_target(self: Op) -> Bool {
+  for x in self.attrs {
+    if (x is Target(_)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+pub fn Op::_else(self: Op) -> Block {
+  for x in self.attrs {
+    if (x is Else(_0)) {
+      return (_0);
+    }
+  }
+  die("no attribute '_else'");
+}
+
+pub fn Op::has_else(self: Op) -> Bool {
+  for x in self.attrs {
+    if (x is Else(_)) {
+      return true;
+    }
+  }
+  return false;
+}
 pub impl Show for Attr with output(self, logger) {
   let str = match self {
     Int(_0) => "<\{_0}>"
@@ -115,6 +153,8 @@ pub impl Show for Attr with output(self, logger) {
     From(_0) => "<from = \{_0}>"
     Name(_0) => "<name = \{_0}>"
     Impure => "<impure>"
+    Target(_0) => "<target = bb\{_0.id}>"
+    Else(_0) => "<else = bb\{_0.id}>"
   }
   logger.write_string(str);
 }

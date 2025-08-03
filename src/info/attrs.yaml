@@ -1,22 +1,30 @@
 int:
   fields: Int
-  format: "<$0>"
+  format: <\{$0}>
 
 double:
   fields: Double
-  format: "<$0>"
+  format: <\{$0}>
 
 arg_count:
   fields: Int
-  format: "<count = $0>"
+  format: <count = \{$0}>
 
 from:
   fields: Array[Block]
-  format: "<from = $0>"
+  format: <from = \{$0}>
 
 name:
   fields: String
-  format: "<name = $0>"
+  format: <name = \{$0}>
 
 impure:
   tag: true
+
+target:
+  fields: Block
+  format: <target = bb\{$0.id}>
+
+_else:
+  fields: Block
+  format: <else = bb\{$0.id}>

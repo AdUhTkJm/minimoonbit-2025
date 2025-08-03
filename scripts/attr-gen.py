@@ -12,16 +12,17 @@ def die(msg: str):
 def canonicalize(k, v):
   if "tag" in v:
     return { "tag": True }
-  
-  required = ["fields", "format"]
-  if any(x not in v for x in required):
-    die(f"fields missing for {k}, required {required}")
 
   fields = v["fields"]
   if isinstance(fields, str):
     fields = [fields]
   
-  return { "tag": False, "fields": fields, "format": v["format"] }
+  l = len(fields)
+  format: str = v["format"]
+  for i in range(l):
+    format = format.replace(f"${i}", f"_{i}")
+
+  return { "tag": False, "fields": fields, "format": format }
 
 data: dict = yaml.safe_load(sys.stdin)
 
@@ -70,7 +71,7 @@ for k, v in data.items():
       die("no attribute '{k}'");
     }}
 
-    pub fn Op::has_{k}(self: Op) -> Bool {{
+    pub fn Op::has_{k if k[0] != '_' else k[1:]}(self: Op) -> Bool {{
       for x in self.attrs {{
         if (x is {camel(k)}(_)) {{
           return true;
@@ -89,9 +90,7 @@ for k, v in data.items():
 
   fields = v["fields"]
   l = len(fields)
-  format: str = v["format"]
+  format = v["format"]
   matcher = ", ".join([f"_{i}" for i in range(l)])
-  for i in range(l):
-    format = format.replace(f"${i}", f"\\{{_{i}}}")
   print(f'{camel(k)}({matcher}) => "{format}"')
 print("  }\n  logger.write_string(str);\n}")

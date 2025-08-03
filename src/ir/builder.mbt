@@ -31,6 +31,7 @@ pub fn Builder::at(self: Builder) -> Node[Op] {
 pub fn Builder::create(self: Builder, kind: OpType, ty: Type, operands: Array[Op], attrs~: Array[Attr]=[]) -> Op {
   let op = Op::build(kind, ty, operands, attrs~, self.bb, self.at);
   self.block().ops.insert(self.at(), op);
+  op.at = self.at().prev;
   return op;
 }
 

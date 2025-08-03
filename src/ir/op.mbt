@@ -42,10 +42,16 @@ pub fn Op::def(self: Op, i: Int) -> Op {
   return self.operands[i];
 }
 
+///|
+/// Gets the block that the operation is in.
+/// 
 pub fn Op::parent(self: Op) -> Block {
   return self.parent.unwrap();
 }
 
+///|
+/// Gets the iterator pointing to the location of the operation within its parent block.
+/// 
 pub fn Op::at(self: Op) -> Node[Op] {
   return self.at.unwrap();
 }
@@ -63,14 +69,13 @@ pub fn Op::remove_user(self: Op, other: Op) -> Unit {
 /// Removes self from parent.
 /// 
 pub fn Op::erase(self: Op) -> Unit {
-  for x in self.operands {
-    x.remove_user(self);
-  }
+  guard self.users.is_empty();
   self.parent().ops.erase(self.at());
 }
 
 pub fn Op::dump(self: Op, depth: Int) -> String {
-  let ret = "%\{self.id}: \{self.ty} = "
+  let ty = if (@utils.config.with_type) { ": \{self.ty}" } else { "" };
+  let ret = "%\{self.id}\{ty} = "
   let operands = if (self.operands.is_empty()) { "" } else { " " + self.operands.map((x) => "%\{x.id}").join(", ") }
   let regions = if (self.regions.is_empty()) { "" }  else { " " + self.regions.map(_.dump(depth + 1)).join(" "); }
   let attrs = if (self.attrs.is_empty()) { "" } else { " " + self.attrs.map(_.to_string()).join(" "); }
@@ -88,14 +93,23 @@ pub fn Op::append_region(self: Op) -> Region {
   return region;
 }
 
+///|
+/// Obtains the operation's first region.
+/// 
 pub fn Op::region(self: Op) -> Region {
   return self.regions[0];
 }
 
+///|
+/// Obtains the first block inside the operation's first region.
+/// 
 pub fn Op::block(self: Op) -> Block {
   return self.region().block();
 }
 
+///|
+/// Returns true if the operation is of kind `kind`.
+/// 
 pub fn Op::isa(self:Op, kind: OpType) -> Bool {
   return self.kind == kind;
 }

@@ -32,6 +32,8 @@ pub(all) enum OpType {
   Eq
   Lt
   Le
+  Br
+  Goto
 } derive(Eq, Hash)
 
 pub impl Default for OpType with default() {
@@ -71,6 +73,8 @@ pub impl Show for OpType with output(self, logger) {
     Eq => "eq"
     Lt => "lt"
     Le => "le"
+    Br => "br"
+    Goto => "goto"
   };
   logger.write_string(str);
 }

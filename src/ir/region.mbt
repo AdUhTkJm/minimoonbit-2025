@@ -29,6 +29,9 @@ pub fn Region::append_block(self: Region) -> Block {
   return block;
 }
 
+///|
+/// Retrieves the first block in this region.
+/// 
 pub fn Region::block(self: Region) -> Block {
   return self.bbs.begin.v();
 }
@@ -37,6 +40,9 @@ pub fn Region::iter(self: Region) -> Iter[Block] {
   return self.bbs.iter();
 }
 
+///|
+/// Inserts an empty block before the given block.
+/// 
 pub fn Region::insert(self: Region, bb: Block) -> Block {
   let block = Block::new(self, self.bbs.end);
   self.bbs.insert(bb.at, block);
@@ -44,10 +50,12 @@ pub fn Region::insert(self: Region, bb: Block) -> Block {
   return block;
 }
 
+///|
+/// Inserts an empty block after the given block.
+/// 
 pub fn Region::insert_after(self: Region, bb: Block) -> Block {
   let block = Block::new(self, self.bbs.end);
   self.bbs.insert(bb.at.next(), block);
   block.at = bb.at.next();
   return block;
 }
-
