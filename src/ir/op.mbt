@@ -147,3 +147,18 @@ pub fn Op::move_after(self: Op, other: Op) -> Unit {
   self.parent = Some(bb);
   self.at = other.at().next() |> Some;
 }
+
+pub fn Op::find_all(self: Op, kind: OpType) -> Array[Op] {
+  let result = [];
+  if (self.isa(kind)) {
+    result.push(self);
+  }
+  for region in self.regions {
+    for bb in region {
+      for op in bb {
+        result.append(op.find_all(kind));
+      }
+    }
+  }
+  return result;
+}

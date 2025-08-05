@@ -27,3 +27,30 @@ pub fn Flatten::funcs(self: Flatten) -> Array[Op] {
   }
   return result;
 }
+
+pub struct MoveAlloca {
+  module: Op
+}
+
+pub impl Pass for MoveAlloca with name(_self) {
+  return "move_alloca";
+}
+
+pub impl Pass for MoveAlloca with operate(self) {
+  MoveAlloca::run(self);
+}
+
+pub fn create_move_alloca(module: Op) -> MoveAlloca {
+  return MoveAlloca :: { module }
+}
+
+pub fn MoveAlloca::funcs(self: MoveAlloca) -> Array[Op] {
+  let bb = self.module.region().block();
+  let result = [];
+  for op in bb {
+    if (op.isa(Func)) {
+      result.push(op);
+    }
+  }
+  return result;
+}

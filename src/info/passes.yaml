@@ -1,5 +1,9 @@
 passes:
+  # Flattens CFG.
   - flatten
+  # Moves `alloca` to functions' very beginning.
+  - move_alloca
 
 pipeline:
+  - move_alloca
   - flatten
