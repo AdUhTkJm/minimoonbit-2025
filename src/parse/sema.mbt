@@ -97,7 +97,11 @@ pub fn TypingEnv::dump(self: TypingEnv, ast: AST, depth: Int) -> String {
 }
 
 pub fn TypingEnv::new() -> TypingEnv {
-  { map: Map::new(), binding: Map::new(), constraints: Set::new() };
+  let env = { map: Map::new(), binding: Map::new(), constraints: Set::new() };
+  // Add predefined functions.
+  env["print_int"] = Function(Unit, [Int])
+  env["print_double"] = Function(Unit, [Double])
+  return env;
 }
 
 pub fn TypingEnv::clone(self: TypingEnv) -> TypingEnv {
@@ -153,7 +157,12 @@ pub fn TypingEnv::infer(self: TypingEnv, x: AST) -> Type {
     Fn({ name, args, retTy, body }) => {
       self[x] = Unit;
       self[name] = Function(retTy, args.map((x) => x.1));
-      self.unify(self.fork(body), Unit);
+      let fork = self.clone();
+      for arg in args {
+        fork[arg.0] = arg.1;
+      }
+      self.unify(fork.infer(body), retTy);
+      self.join(fork);
     }
     Let({ name, init, ty }) => {
       self.unify(self.infer(init), ty);
@@ -195,11 +204,11 @@ pub fn TypingEnv::infer(self: TypingEnv, x: AST) -> Type {
     }
     If(cond, ifso, ifnot) => {
       self.unify(self.infer(cond), Bool);
-      self.unify(self.infer(ifso), Unit);
+      let ty = self.infer(ifso);
       if (ifnot is Some(ifnot)) {
-        self.unify(self.infer(ifnot), Unit);
+        self.unify(self.infer(ifnot), ty);
       }
-      self[x] = Unit;
+      self[x] = ty;
     }
     Assign(l, r) => {
       self.unify(self.infer(l), self.infer(r));

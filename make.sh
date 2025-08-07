@@ -18,6 +18,8 @@ while [[ $# -gt 0 ]]; do
       echo "usage: make.sh -p <print after>"
     fi
     after=$2; shift 2;;
+  --ast)
+    dump_ast="--ast"; shift 1;;
   --clean)
     # Cleans test files.
     clean=1; shift 1;;
@@ -31,6 +33,12 @@ while [[ $# -gt 0 ]]; do
 done
 
 mkdir -p build
+
+if [[ ! -d test/official ]]; then
+  git clone https://github.com/moonbitlang/contest-2025-data.git test/contest
+  mv test/contest/test_cases test/official
+  rm -rf test/contest
+fi
 
 # Detect file changes.
 timestamp=$(date +%s)
@@ -57,7 +65,7 @@ if [[ -z $no_rebuild ]]; then
 fi
 
 if [[ -n $testcase ]]; then
-  testcase=$(find test -regextype posix-egrep -regex ".*$testcase(\.mbt)?")
+  testcase=$(find test -regextype posix-egrep -regex ".*/$testcase(\.mbt)?")
   out=out.txt
   err=err.txt
   before_args=()
@@ -68,7 +76,7 @@ if [[ -n $testcase ]]; then
   if [[ -n $after ]]; then
     after_args=(-p "$after")
   fi
-  moon run src/bin/main.mbt -- "$testcase" $withtype "${before_args[@]}" "${after_args[@]}" > $out 2> $err
+  moon run src/bin/main.mbt -- "$testcase" $withtype "${before_args[@]}" "${after_args[@]}" $dump_ast > $out 2> $err
   retval=$?
 
   errpos=$(sed -En 's/.*error: .*\(character: ([0-9]+)\)/\1/p' $out)
@@ -97,6 +105,7 @@ if [[ -n $testcase ]]; then
 
   if [[ $retval -ne 0 ]]; then
     echo "panicked."
+    cat $err
   fi
   cat $out
 

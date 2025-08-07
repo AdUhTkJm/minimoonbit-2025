@@ -12,3 +12,6 @@ target
 err.txt
 out.txt
 build
+
+# Official data
+test/official

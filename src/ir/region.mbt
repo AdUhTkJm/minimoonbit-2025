@@ -12,7 +12,7 @@ pub fn Region::dump(self: Region, depth: Int) -> String {
   let indent = String::make(depth * 2 - 2, ' ');
   if (self.bbs.size() == 1) {
     // Ignore the basic block count.
-    return "{\n\{self.bbs.begin.v().dump(depth, with_tag=false)}\n\{indent}};"
+    return "{\n\{self.bbs.begin.v().dump(depth, with_tag=false)}\n\{indent}}"
   }
   let bbs = self.bbs.to_array().map(_.dump(depth)).join("\n");
   return "{\n\{bbs}\n\{indent}}"

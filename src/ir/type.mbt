@@ -38,3 +38,7 @@ pub let i32: Type = Type::new("i32");
 pub let f64: Type = Type::new("f64");
 pub let unit: Type = Type::new("unit");
 pub let bool: Type = Type::new("bool");
+
+pub fn Type::func(retTy: Type, args: Array[Type]) -> Type {
+  return Type::make("func", [ retTy, ..args ]);
+}

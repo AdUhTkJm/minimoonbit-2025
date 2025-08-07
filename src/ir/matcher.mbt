@@ -1,4 +1,4 @@
-pub enum Sexp {
+pub(all) enum Sexp {
   Atom(String)
   List(Array[String])
 }
@@ -10,10 +10,10 @@ pub impl Show for Sexp with output(self, logger) {
   })
 }
 
-pub struct Rule {
+pub(all) struct Rule {
   sexp: Sexp
 }
 
-pub fn Rule::new(str: String) -> Rule {
-  ...
+pub fn Rule::new(_str: String) -> Rule {
+  panic();
 }

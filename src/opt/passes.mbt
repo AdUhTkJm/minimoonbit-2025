@@ -80,7 +80,7 @@ pub(all) struct MoveAlloca {
 }
 
 pub impl Pass for MoveAlloca with name(_self) {
-  return "move_alloca";
+  return "move-alloca";
 }
 
 pub impl Pass for MoveAlloca with operate(self) {

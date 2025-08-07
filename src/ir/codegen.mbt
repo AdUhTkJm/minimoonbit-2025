@@ -1,6 +1,7 @@
 pub struct SymbolTable {
   locals: Map[String, Op]
   globals: Map[String, Type]
+  funcs: Set[String]
   builder: Builder
 }
 
@@ -51,7 +52,12 @@ pub fn cvt(x: @parse.Type) -> Type {
 pub fn CodeGen::clone(self: CodeGen) -> CodeGen {
   let builder = Builder::new();
   {
-    symtbl: { locals: self.symtbl.locals.clone(), globals: self.symtbl.globals.clone(), builder },
+    symtbl: {
+      locals: self.symtbl.locals.clone(),
+      globals: self.symtbl.globals.clone(),
+      funcs: self.symtbl.funcs.iter() |> Set::from_iter(),
+      builder
+    },
     builder,
     env: self.env,
     init: self.init
@@ -60,10 +66,20 @@ pub fn CodeGen::clone(self: CodeGen) -> CodeGen {
 
 pub fn CodeGen::new(env: TypingEnv) -> CodeGen {
   let builder = Builder::new();
-  {
-    symtbl: { locals: Map::new(), globals: Map::new(), builder },
+  let cg = {
+    symtbl: { locals: Map::new(), globals: Map::from_array({
+      "print_int": Type::func(unit, [i32]),
+      "print_double": Type::func(unit, [f64]),
+    }.to_array()), funcs: [
+      "print_int", "print_double"
+    ] |> Set::from_array, builder },
     builder, env, init: Op::default()
   }
+  return cg;
+}
+
+pub fn CodeGen::isRawFunction(self: CodeGen, name: String) -> Bool {
+  return !self.symtbl.locals.contains(name) && self.symtbl.funcs.contains(name);
 }
 
 pub fn CodeGen::stmt(self: CodeGen, x: AST, ctx~: Ctx = Load) -> Op {
@@ -116,6 +132,9 @@ pub fn CodeGen::stmt(self: CodeGen, x: AST, ctx~: Ctx = Load) -> Op {
     }
     Var(name) => {
       let addr = self.symtbl[name];
+      if (self.isRawFunction(name)) {
+        return addr;
+      }
       if (ctx is Store) {
         return addr;
       }
@@ -141,32 +160,45 @@ pub fn CodeGen::stmt(self: CodeGen, x: AST, ctx~: Ctx = Load) -> Op {
       return builder.create(MakeUnitOp, unit, []);
     }
     While(cond, body) => {
-      let cond = self.stmt(cond);
-      let _while = builder.create(WhileOp, unit, [cond]);
-      let region = _while.appendRegion();
-      let block = region.appendBlock();
+      let _while = builder.create(WhileOp, unit, []);
       let point = builder.getInsertionPoint();
-      builder.setToBlockStart(block);
+
+      let before = _while.appendRegion();
+      builder.setToBlockStart(before.appendBlock());
+      let cond = self.stmt(cond);
+      builder.creates(ProceedOp, unit, [cond]);
+
+      let after = _while.appendRegion();
+      builder.setToBlockStart(after.appendBlock());
       self.stmt(body) |> ignore;
+      
       builder.setTo(point);
       return _while;
     }
     If(cond, ifso, ifnot) => {
       let cond = self.stmt(cond);
-      let _if = builder.create(IfOp, self[x], [cond]);
+      let ty = self[x];
+      
+      // The value address of the if-expression.
+      let alloca = builder.create(AllocaOp, ty.ptr(), []);
+      let _if = builder.create(IfOp, unit, [cond]);
       let region = _if.appendRegion();
       let block = region.appendBlock();
       let point = builder.getInsertionPoint();
+
       builder.setToBlockStart(block);
-      self.stmt(ifso) |> ignore;
+      let last = self.stmt(ifso);
+      builder.creates(StoreOp, unit, [last, alloca]);
+
       if (ifnot is Some(ifnot)) {
         let region = _if.appendRegion();
         let block = region.appendBlock();
         builder.setToBlockStart(block);
-        self.stmt(ifnot) |> ignore;
+        let last = self.stmt(ifnot);
+        builder.creates(StoreOp, unit, [last, alloca]);
       }
       builder.setTo(point);
-      return _if;
+      return builder.create(LoadOp, ty, [alloca]);
     }
     _ => die("unknown statement: \{x}")
   }
@@ -179,8 +211,9 @@ pub fn CodeGen::top(self: CodeGen, x: AST) -> Unit {
       let f = builder.create(FuncOp, unit, [], attrs=[ArgCount(detail.args.length()), Name(detail.name)]);
       let region = f.appendRegion();
       let block = region.appendBlock();
-      let subgen = self.clone();
       self.symtbl.globals[detail.name] = cvt(Function(detail.retTy, detail.args.map((x) => x.1)));
+      self.symtbl.funcs.add(detail.name);
+      let subgen = self.clone();
       subgen.builder.setToBlockStart(block);
       for i, x in detail.args {
         subgen.symtbl[x.0] = subgen.builder.create(GetArgOp, cvt(x.1).ptr(), [], attrs=[Int(i)]);

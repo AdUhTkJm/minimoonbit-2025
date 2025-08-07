@@ -2,13 +2,10 @@ fn flattenIf(func: Op) -> Bool {
   let builder = Builder::new();
   let region = func.region();
   for bb in region {
-    let ops = bb.ops();
-    for op in ops {
+    for op in bb.ops() {
       if (!isa[IfOp](op)) {
         continue;
       }
-      // Non-unit `if`s should have been preprocessed.
-      guard op.ty == unit;
 
       let parent = op.parent();
       let exit = parent.split(op);
@@ -57,8 +54,7 @@ fn flattenWhile(func: Op) -> Bool {
   let builder = Builder::new();
   let region = func.region();
   for bb in region {
-    let ops = bb.ops();
-    for op in ops {
+    for op in bb.ops() {
       if (!isa[WhileOp](op)) {
         continue;
       }
@@ -70,15 +66,20 @@ fn flattenWhile(func: Op) -> Bool {
       // Move the while's body between header and exit.
       let header = region.insertAfter(preheader);
       let body = region.insertAfter(header);
-      let ops = op.block().ops();
+      let ops = op.regions[1].block().ops();
       for op in ops {
         op.moveToEnd(body);
       }
 
       // The condition must be checked by `bb`.
       builder.setToBlockEnd(header);
-      let cond = op.def(0);
-      builder.creates(BrOp, unit, [cond], attrs=[Target(body), Else(exit)]);
+      let ops = op.regions[0].block().ops();
+      for op in ops {
+        op.moveToEnd(header);
+      }
+      let term = ops.back();
+      guard isa[ProceedOp](term) else { die("\{term}: proceed") }
+      builder.creates(BrOp, unit, [term.def(0)], attrs=[Target(body), Else(exit)]);
 
       // The loop jumps back to header.
       builder.setToBlockEnd(body);

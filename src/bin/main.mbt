@@ -16,7 +16,7 @@ fn compile(filename: String) -> Unit {
 }
 
 test {
-  compile("test/dce_test.mbt")
+  compile("test/official/mbt/ack.mbt")
 }
 
 fn main {

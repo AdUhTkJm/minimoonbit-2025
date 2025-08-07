@@ -144,6 +144,7 @@ pub fn Lexer::next(self: Lexer) -> Token {
     ':' => Colon
     ';' => Semicolon
     '.' => Dot
+    ',' => Comma
     'a'..='z' => {
       let name = [c];
       for c = self.ch(); c is ('a'..='z' | 'A' ..= 'Z' | '_' | '0'..='9'); c = self.ch() {

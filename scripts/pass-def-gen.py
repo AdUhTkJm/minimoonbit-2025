@@ -33,7 +33,7 @@ pub(all) struct {Name} {{
 }}
 
 pub impl Pass for {Name} with name(_self) {{
-  return "{name}";
+  return "{name.replace('_', '-')}";
 }}
 
 pub impl Pass for {Name} with operate(self) {{

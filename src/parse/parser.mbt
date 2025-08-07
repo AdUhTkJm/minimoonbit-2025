@@ -191,7 +191,15 @@ pub fn Parser::_if(self: Parser) -> AST {
   if (self.check(If)) {
     let cond = self.expr();
     let ifso = self.block();
-    let ifnot = if (self.check(Else)) { Some(self.block()) } else { None }
+    let ifnot = if (self.check(Else)) {
+      if (self.peek().isa(If)) {
+        Some(self._if());
+      } else {
+        Some(self.block());
+      }
+    } else {
+      None;
+    }
     return If(cond, ifso, ifnot);
   }
   if (self.check(Match)) {
