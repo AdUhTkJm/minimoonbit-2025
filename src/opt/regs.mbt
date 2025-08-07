@@ -1,8 +1,8 @@
-
-
 // We don't use an Enum, because:
 // 1. The enum elements must be uppercase, which is annoying;
 // 2. Integers are good for doing ad-hoc hacks (because of larger ranges).
+
+// Integer registers.
 pub let zero = 0;
 pub let ra = 1;
 pub let sp = 2;
@@ -35,3 +35,37 @@ pub let t3 = 28;
 pub let t4 = 29;
 pub let t5 = 30;
 pub let t6 = 31;
+
+// Floating point registers.
+pub let ft0: Int = 0 + 32;
+pub let ft1: Int = 1 + 32;
+pub let ft2: Int = 2 + 32;
+pub let ft3: Int = 3 + 32;
+pub let ft4: Int = 4 + 32;
+pub let ft5: Int = 5 + 32;
+pub let ft6: Int = 6 + 32;
+pub let ft7: Int = 7 + 32;
+pub let fs0: Int = 8 + 32;
+pub let fs1: Int = 9 + 32;
+pub let fa0: Int = 10 + 32;
+pub let fa1: Int = 11 + 32;
+pub let fa2: Int = 12 + 32;
+pub let fa3: Int = 13 + 32;
+pub let fa4: Int = 14 + 32;
+pub let fa5: Int = 15 + 32;
+pub let fa6: Int = 16 + 32;
+pub let fa7: Int = 17 + 32;
+pub let fs2: Int = 18 + 32;
+pub let fs3: Int = 19 + 32;
+pub let fs4: Int = 20 + 32;
+pub let fs5: Int = 21 + 32;
+pub let fs6: Int = 22 + 32;
+pub let fs7: Int = 23 + 32;
+pub let fs8: Int = 24 + 32;
+pub let fs9: Int = 25 + 32;
+pub let fs10: Int = 26 + 32;
+pub let fs11: Int = 27 + 32;
+pub let ft8: Int = 28 + 32;
+pub let ft9: Int = 29 + 32;
+pub let ft10: Int = 30 + 32;
+pub let ft11: Int = 31 + 32;

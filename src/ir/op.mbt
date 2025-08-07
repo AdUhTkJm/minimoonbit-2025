@@ -238,3 +238,11 @@ pub fn Op::removeOperand(self: Op, i: Int) -> Unit {
   self.stopUsing(x);
   self.operands = self.operands[:i].to_array() + self.operands[i+1:].to_array();
 }
+
+pub fn Op::getOperands(self: Op) -> Array[Op] {
+  return self.operands;
+}
+
+pub fn Op::getOperandCount(self: Op) -> Int {
+  return self.operands.length();
+}

@@ -38,6 +38,7 @@ pub(all) enum OpKind {
   ProceedOp
   ReadRegOp
   WriteRegOp
+  SubSpOp
   LiOp
   LaOp
   AddiOp
@@ -122,6 +123,7 @@ pub impl Show for OpKind with output(self, logger) {
     ProceedOp => "proceed"
     ReadRegOp => "read_reg"
     WriteRegOp => "write_reg"
+    SubSpOp => "sub_sp"
     LiOp => "li"
     LaOp => "la"
     AddiOp => "addi"

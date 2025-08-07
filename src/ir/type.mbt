@@ -35,6 +35,7 @@ pub fn Type::fp(self: Type) -> Bool {
 }
 
 pub let i32: Type = Type::new("i32");
+pub let i64: Type = Type::new("i64");
 pub let f64: Type = Type::new("f64");
 pub let unit: Type = Type::new("unit");
 pub let bool: Type = Type::new("bool");
