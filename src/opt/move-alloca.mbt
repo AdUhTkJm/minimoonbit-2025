@@ -1,14 +1,14 @@
 pub fn MoveAlloca::run(self: MoveAlloca) -> Unit {
   for func in self.funcs() {
-    MoveAlloca::run_fn(func);
+    MoveAlloca::runImpl(func);
   }
 }
 
-pub fn MoveAlloca::run_fn(func: Op) -> Unit {
-  let allocas = func.find_all(Alloca);
+pub fn MoveAlloca::runImpl(func: Op) -> Unit {
+  let allocas = func.findAll(AllocaOp);
   let bb = func.region().insert(func.block());
   
   for x in allocas {
-    x.move_to_start(bb);
+    x.moveToStart(bb);
   }
 }

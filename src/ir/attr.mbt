@@ -11,7 +11,7 @@ pub(all) enum Attr {
   Else(Block)
 }
 
-pub fn Op::int(self: Op) -> Int {
+pub fn Op::getInt(self: Op) -> Int {
   for x in self.attrs {
     if (x is Int(_0)) {
       return (_0);
@@ -20,7 +20,7 @@ pub fn Op::int(self: Op) -> Int {
   die("no attribute 'int'");
 }
 
-pub fn Op::has_int(self: Op) -> Bool {
+pub fn Op::hasInt(self: Op) -> Bool {
   for x in self.attrs {
     if (x is Int(_)) {
       return true;
@@ -29,7 +29,15 @@ pub fn Op::has_int(self: Op) -> Bool {
   return false;
 }
 
-pub fn Op::double(self: Op) -> Double {
+pub fn Op::removeInt(self: Op) -> Unit {
+  for i, x in self.attrs {
+    if (x is Int(_)) {
+      self.attrs = self.attrs[:i].to_array() + self.attrs[i+1:].to_array();
+    }
+  }
+}
+
+pub fn Op::getDouble(self: Op) -> Double {
   for x in self.attrs {
     if (x is Double(_0)) {
       return (_0);
@@ -38,7 +46,7 @@ pub fn Op::double(self: Op) -> Double {
   die("no attribute 'double'");
 }
 
-pub fn Op::has_double(self: Op) -> Bool {
+pub fn Op::hasDouble(self: Op) -> Bool {
   for x in self.attrs {
     if (x is Double(_)) {
       return true;
@@ -47,7 +55,15 @@ pub fn Op::has_double(self: Op) -> Bool {
   return false;
 }
 
-pub fn Op::arg_count(self: Op) -> Int {
+pub fn Op::removeDouble(self: Op) -> Unit {
+  for i, x in self.attrs {
+    if (x is Double(_)) {
+      self.attrs = self.attrs[:i].to_array() + self.attrs[i+1:].to_array();
+    }
+  }
+}
+
+pub fn Op::getArgCount(self: Op) -> Int {
   for x in self.attrs {
     if (x is ArgCount(_0)) {
       return (_0);
@@ -56,7 +72,7 @@ pub fn Op::arg_count(self: Op) -> Int {
   die("no attribute 'arg_count'");
 }
 
-pub fn Op::has_arg_count(self: Op) -> Bool {
+pub fn Op::hasArgCount(self: Op) -> Bool {
   for x in self.attrs {
     if (x is ArgCount(_)) {
       return true;
@@ -65,7 +81,15 @@ pub fn Op::has_arg_count(self: Op) -> Bool {
   return false;
 }
 
-pub fn Op::from(self: Op) -> Array[Block] {
+pub fn Op::removeArgCount(self: Op) -> Unit {
+  for i, x in self.attrs {
+    if (x is ArgCount(_)) {
+      self.attrs = self.attrs[:i].to_array() + self.attrs[i+1:].to_array();
+    }
+  }
+}
+
+pub fn Op::getFrom(self: Op) -> Array[Block] {
   for x in self.attrs {
     if (x is From(_0)) {
       return (_0);
@@ -74,7 +98,7 @@ pub fn Op::from(self: Op) -> Array[Block] {
   die("no attribute 'from'");
 }
 
-pub fn Op::has_from(self: Op) -> Bool {
+pub fn Op::hasFrom(self: Op) -> Bool {
   for x in self.attrs {
     if (x is From(_)) {
       return true;
@@ -83,7 +107,15 @@ pub fn Op::has_from(self: Op) -> Bool {
   return false;
 }
 
-pub fn Op::name(self: Op) -> String {
+pub fn Op::removeFrom(self: Op) -> Unit {
+  for i, x in self.attrs {
+    if (x is From(_)) {
+      self.attrs = self.attrs[:i].to_array() + self.attrs[i+1:].to_array();
+    }
+  }
+}
+
+pub fn Op::getName(self: Op) -> String {
   for x in self.attrs {
     if (x is Name(_0)) {
       return (_0);
@@ -92,13 +124,21 @@ pub fn Op::name(self: Op) -> String {
   die("no attribute 'name'");
 }
 
-pub fn Op::has_name(self: Op) -> Bool {
+pub fn Op::hasName(self: Op) -> Bool {
   for x in self.attrs {
     if (x is Name(_)) {
       return true;
     }
   }
   return false;
+}
+
+pub fn Op::removeName(self: Op) -> Unit {
+  for i, x in self.attrs {
+    if (x is Name(_)) {
+      self.attrs = self.attrs[:i].to_array() + self.attrs[i+1:].to_array();
+    }
+  }
 }
 
 pub fn Op::impure(self: Op) -> Bool {
@@ -110,7 +150,15 @@ pub fn Op::impure(self: Op) -> Bool {
   return false;
 }
 
-pub fn Op::target(self: Op) -> Block {
+pub fn Op::removeImpure(self: Op) -> Unit {
+  for i, x in self.attrs {
+    if (x is Impure(_)) {
+      self.attrs = self.attrs[:i].to_array() + self.attrs[i+1:].to_array();
+    }
+  }
+}
+
+pub fn Op::getTarget(self: Op) -> Block {
   for x in self.attrs {
     if (x is Target(_0)) {
       return (_0);
@@ -119,7 +167,7 @@ pub fn Op::target(self: Op) -> Block {
   die("no attribute 'target'");
 }
 
-pub fn Op::has_target(self: Op) -> Bool {
+pub fn Op::hasTarget(self: Op) -> Bool {
   for x in self.attrs {
     if (x is Target(_)) {
       return true;
@@ -128,7 +176,15 @@ pub fn Op::has_target(self: Op) -> Bool {
   return false;
 }
 
-pub fn Op::_else(self: Op) -> Block {
+pub fn Op::removeTarget(self: Op) -> Unit {
+  for i, x in self.attrs {
+    if (x is Target(_)) {
+      self.attrs = self.attrs[:i].to_array() + self.attrs[i+1:].to_array();
+    }
+  }
+}
+
+pub fn Op::getElse(self: Op) -> Block {
   for x in self.attrs {
     if (x is Else(_0)) {
       return (_0);
@@ -137,13 +193,21 @@ pub fn Op::_else(self: Op) -> Block {
   die("no attribute '_else'");
 }
 
-pub fn Op::has_else(self: Op) -> Bool {
+pub fn Op::hasElse(self: Op) -> Bool {
   for x in self.attrs {
     if (x is Else(_)) {
       return true;
     }
   }
   return false;
+}
+
+pub fn Op::removeElse(self: Op) -> Unit {
+  for i, x in self.attrs {
+    if (x is Else(_)) {
+      self.attrs = self.attrs[:i].to_array() + self.attrs[i+1:].to_array();
+    }
+  }
 }
 pub impl Show for Attr with output(self, logger) {
   let str = match self {

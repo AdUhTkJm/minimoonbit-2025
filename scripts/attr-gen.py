@@ -51,6 +51,14 @@ for k, v in data.items():
           }}
         }}
         return false;
+      }}
+
+      pub fn Op::remove{camel(k)}(self: Op) -> Unit {{
+        for i, x in self.attrs {{
+          if (x is {camel(k)}(_)) {{
+            self.attrs = self.attrs[:i].to_array() + self.attrs[i+1:].to_array();
+          }}
+        }}
       }}"""))
     continue
 
@@ -62,7 +70,7 @@ for k, v in data.items():
   retval = ", ".join([f"_{i}" for i in range(l)])
   
   print(textwrap.dedent(f"""
-    pub fn Op::{k}(self: Op) -> {retTy} {{
+    pub fn Op::get{camel(k)}(self: Op) -> {retTy} {{
       for x in self.attrs {{
         if (x is {camel(k)}({retval})) {{
           return ({retval});
@@ -71,13 +79,21 @@ for k, v in data.items():
       die("no attribute '{k}'");
     }}
 
-    pub fn Op::has_{k if k[0] != '_' else k[1:]}(self: Op) -> Bool {{
+    pub fn Op::has{camel(k)}(self: Op) -> Bool {{
       for x in self.attrs {{
         if (x is {camel(k)}(_)) {{
           return true;
         }}
       }}
       return false;
+    }}
+
+    pub fn Op::remove{camel(k)}(self: Op) -> Unit {{
+      for i, x in self.attrs {{
+        if (x is {camel(k)}(_)) {{
+          self.attrs = self.attrs[:i].to_array() + self.attrs[i+1:].to_array();
+        }}
+      }}
     }}"""))
 
 # Now dump them.

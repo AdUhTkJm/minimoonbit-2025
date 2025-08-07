@@ -22,7 +22,7 @@ pub fn Region::new(parent: Op) -> Region {
   { bbs: List::new(), parent }
 }
 
-pub fn Region::append_block(self: Region) -> Block {
+pub fn Region::appendBlock(self: Region) -> Block {
   let block = Block::new(self, self.bbs.end);
   self.bbs.push_back(block);
   block.at = self.bbs.end.prev();
@@ -53,21 +53,21 @@ pub fn Region::insert(self: Region, bb: Block) -> Block {
 ///|
 /// Inserts an empty block after the given block.
 /// 
-pub fn Region::insert_after(self: Region, bb: Block) -> Block {
+pub fn Region::insertAfter(self: Region, bb: Block) -> Block {
   let block = Block::new(self, self.bbs.end);
   self.bbs.insert(bb.at.next(), block);
   block.at = bb.at.next();
   return block;
 }
 
-pub fn Region::update_preds(self: Region) -> Unit {
+pub fn Region::updatePreds(self: Region) -> Unit {
   for bb in self.bbs {
-    let term = bb.back();
-    if term.has_target() {
-      bb.succs.add(term.target());
+    let term = bb.getLastOp();
+    if term.hasTarget() {
+      bb.succs.add(term.getTarget());
     }
-    if term.has_else() {
-      bb.succs.add(term._else());
+    if term.hasElse() {
+      bb.succs.add(term.getElse());
     }
   }
 
@@ -78,8 +78,8 @@ pub fn Region::update_preds(self: Region) -> Unit {
   }
 }
 
-pub fn Region::update_doms(self: Region) -> Unit {
-  self.update_preds();
+pub fn Region::updateDoms(self: Region) -> Unit {
+  self.updatePreds();
   for bb in self.bbs {
     bb.doms = self.bbs.iter() |> Set::from_iter();
   }
@@ -118,7 +118,10 @@ pub fn Region::update_doms(self: Region) -> Unit {
       }
     }
   }
+}
 
+pub fn Region::updateDomfront(self: Region) -> Unit {
+  self.updateDoms();
   for bb in self.bbs {
     bb.domfront = Set::new();
   }
@@ -142,4 +145,17 @@ pub fn Region::front(self: Region) -> Block {
 
 pub fn Region::back(self: Region) -> Block {
   return self.bbs.end.prev().v();
+}
+
+pub fn Region::domtree(self: Region) -> Map[Block, Array[Block]] {
+  let result: Map[Block, Array[Block]] = Map::new();
+  for bb in self.bbs {
+    result[bb] = [];
+  }
+  for bb in self.bbs {
+    for x in bb.doms {
+      result[x].push(bb);
+    }
+  }
+  return result;
 }

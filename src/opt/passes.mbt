@@ -1,8 +1,8 @@
 // Auto generated. Do not edit!
 
 
-pub struct Flatten {
-  module: Op
+pub(all) struct Flatten {
+  mut module: Op
 }
 
 pub impl Pass for Flatten with name(_self) {
@@ -21,15 +21,25 @@ pub fn Flatten::funcs(self: Flatten) -> Array[Op] {
   let bb = self.module.region().block();
   let result = [];
   for op in bb {
-    if (op.isa(Func)) {
+    if (isa[FuncOp](op)) {
+      result.push(op);
+    }
+  }
+  return result;
+}
+pub fn Flatten::globals(self: Flatten) -> Array[Op] {
+  let bb = self.module.region().block();
+  let result = [];
+  for op in bb {
+    if (isa[GlobalOp](op)) {
       result.push(op);
     }
   }
   return result;
 }
 
-pub struct MoveAlloca {
-  module: Op
+pub(all) struct MoveAlloca {
+  mut module: Op
 }
 
 pub impl Pass for MoveAlloca with name(_self) {
@@ -48,16 +58,29 @@ pub fn MoveAlloca::funcs(self: MoveAlloca) -> Array[Op] {
   let bb = self.module.region().block();
   let result = [];
   for op in bb {
-    if (op.isa(Func)) {
+    if (isa[FuncOp](op)) {
+      result.push(op);
+    }
+  }
+  return result;
+}
+pub fn MoveAlloca::globals(self: MoveAlloca) -> Array[Op] {
+  let bb = self.module.region().block();
+  let result = [];
+  for op in bb {
+    if (isa[GlobalOp](op)) {
       result.push(op);
     }
   }
   return result;
 }
 
-pub struct Mem2Reg {
-  module: Op
-  visited: Set[Op]
+pub(all) struct Mem2Reg {
+  mut module: Op
+  mut visited: Set[Block]
+  mut converted: Set[Op]
+  mut domtree: Map[Block, Array[Block]]
+  mut phiFrom: Map[Op, Op]
 }
 
 pub impl Pass for Mem2Reg with name(_self) {
@@ -69,14 +92,24 @@ pub impl Pass for Mem2Reg with operate(self) {
 }
 
 pub fn create_mem2reg(module: Op) -> Mem2Reg {
-  return Mem2Reg :: { module, visited: Set::new() }
+  return Mem2Reg :: { module, visited: Set::new(), converted: Set::new(), domtree: Map::new(), phiFrom: Map::new() }
 }
 
 pub fn Mem2Reg::funcs(self: Mem2Reg) -> Array[Op] {
   let bb = self.module.region().block();
   let result = [];
   for op in bb {
-    if (op.isa(Func)) {
+    if (isa[FuncOp](op)) {
+      result.push(op);
+    }
+  }
+  return result;
+}
+pub fn Mem2Reg::globals(self: Mem2Reg) -> Array[Op] {
+  let bb = self.module.region().block();
+  let result = [];
+  for op in bb {
+    if (isa[GlobalOp](op)) {
       result.push(op);
     }
   }

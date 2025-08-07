@@ -19,7 +19,7 @@ for name in passes:
     types = list(list(entry.values())[0][0] for entry in fields)
     defaults = list(list(entry.values())[0][1] for entry in fields)
 
-    decl = "".join(f"\n  {name}: {type}" for name, type in zip(names, types))
+    decl = "".join(f"\n  mut {name}: {type}" for name, type in zip(names, types))
     default = "".join(f", {k}: {v}" for k, v in zip(names, defaults))
   else:
     decl = ""
@@ -28,8 +28,8 @@ for name in passes:
 
   Name = camel(name)
   print(textwrap.dedent(f"""
-pub struct {Name} {{
-  module: Op{decl}
+pub(all) struct {Name} {{
+  mut module: Op{decl}
 }}
 
 pub impl Pass for {Name} with name(_self) {{
@@ -50,7 +50,17 @@ pub fn {Name}::funcs(self: {Name}) -> Array[Op] {{
   let bb = self.module.region().block();
   let result = [];
   for op in bb {{
-    if (op.isa(Func)) {{
+    if (isa[FuncOp](op)) {{
+      result.push(op);
+    }}
+  }}
+  return result;
+}}
+pub fn {Name}::globals(self: {Name}) -> Array[Op] {{
+  let bb = self.module.region().block();
+  let result = [];
+  for op in bb {{
+    if (isa[GlobalOp](op)) {{
       result.push(op);
     }}
   }}

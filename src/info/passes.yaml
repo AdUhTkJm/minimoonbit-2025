@@ -2,7 +2,10 @@ passes:
   - flatten
   - move_alloca
   - mem2reg:
-    - visited: ["Set[Op]", "Set::new()"]
+    - visited: ["Set[Block]", "Set::new()"]
+    - converted: ["Set[Op]", "Set::new()"]
+    - domtree: ["Map[Block, Array[Block]]", "Map::new()"]
+    - phiFrom: ["Map[Op, Op]", "Map::new()"]
 
 pipeline:
   - move_alloca

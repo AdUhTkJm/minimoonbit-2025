@@ -77,11 +77,11 @@ pub fn Block::end(self: Block) -> Node[Op] {
 
 pub fn Block::split_at(self: Block, at: Node[Op]) -> Block {
   let region = self.parent;
-  let bb = region.insert_after(self);
+  let bb = region.insertAfter(self);
   let mut it = at;
   while it != self.end() {
     let next = it.next();
-    it.v().move_to_end(bb);
+    it.v().moveToEnd(bb);
     it = next;
   }
   return bb;
@@ -105,7 +105,7 @@ pub fn Block::dominated_by(self: Block, other: Block) -> Bool {
 ///|
 /// Retrieves the last Op in the block.
 /// 
-pub fn Block::back(self: Block) -> Op {
+pub fn Block::getLastOp(self: Block) -> Op {
   return self.ops.back();
 }
 
@@ -128,4 +128,15 @@ pub fn Block::at_back(self: Block) -> Bool {
 /// 
 pub fn Block::idom(self: Block) -> Block {
   return self.idom.unwrap();
+}
+
+pub fn Block::getPhis(self: Block) -> Array[Op] {
+  let phis = [];
+  for x in self {
+    if (!isa[PhiOp](x)) {
+      break;
+    }
+    phis.push(x);
+  }
+  return phis;
 }

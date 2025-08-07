@@ -5,18 +5,18 @@ def camel(x: str):
 
 lines = [x.strip() for x in sys.stdin]
 print("// Auto generated file. Do not edit!\n")
-print("pub(all) enum OpType {")
+print("pub(all) enum OpKind {")
 for x in lines:
-  print(f"  {camel(x)}")
+  print(f"  {camel(x)}Op")
 print("} derive(Eq, Hash)")
 
 print("""
-pub impl Default for OpType with default() {
-  return Module;
+pub impl Default for OpKind with default() {
+  return ModuleOp;
 }
 """)
 
-print("pub impl Show for OpType with output(self, logger) {\n  let str = match self {")
+print("pub impl Show for OpKind with output(self, logger) {\n  let str = match self {")
 for x in lines:
-  print(f"    {camel(x)} => \"{x}\"")
+  print(f"    {camel(x)}Op => \"{x}\"")
 print("  };\n  logger.write_string(str);\n}")

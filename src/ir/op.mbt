@@ -1,16 +1,16 @@
 pub(all) struct Op {
   id: Int
-  kind: OpType
+  kind: OpKind
   ty: Type
   operands: Array[Op]
-  attrs: Array[Attr]
+  mut attrs: Array[Attr]
   regions: Array[Region]
 
   mut parent: Block?
   mut at: Node[Op]?
 
   // We need a mutable multiset here. Unfortunately we don't have such thing in Moonbit.
-  mut users: Array[Op]
+  mut uses: Array[Op]
 } derive(Default)
 
 pub impl Eq for Op with op_equal(self, other) {
@@ -27,10 +27,10 @@ priv struct OpEnv {
 
 let openv: OpEnv = { cnt: 0 };
 
-pub fn Op::build(kind: OpType, ty: Type, operands: Array[Op], attrs~: Array[Attr] = [], parent: Block?, at: Node[Op]?) -> Op {
+pub fn Op::build(kind: OpKind, ty: Type, operands: Array[Op], attrs~: Array[Attr] = [], parent: Block?, at: Node[Op]?) -> Op {
   let cnt = openv.cnt;
   openv.cnt += 1;
-  { id: cnt, kind, ty, operands, attrs, regions: [], parent, at, users: [] }
+  { id: cnt, kind, ty, operands, attrs, regions: [], parent, at, uses: operands.iter() |> Array::from_iter }
 }
 
 ///|
@@ -56,10 +56,10 @@ pub fn Op::at(self: Op) -> Node[Op] {
   return self.at.unwrap();
 }
 
-pub fn Op::remove_user(self: Op, other: Op) -> Unit {
-  for i, user in self.users {
+pub fn Op::removeUser(self: Op, other: Op) -> Unit {
+  for i, user in self.uses {
     if (user == other) {
-      self.users = self.users[:i].to_array() + self.users[i+1:].to_array();
+      self.uses = self.uses[:i].to_array() + self.uses[i+1:].to_array();
       break;
     }
   }
@@ -69,7 +69,7 @@ pub fn Op::remove_user(self: Op, other: Op) -> Unit {
 /// Removes self from parent.
 /// 
 pub fn Op::erase(self: Op) -> Unit {
-  guard self.users.is_empty();
+  guard self.uses.is_empty();
   self.parent().ops.erase(self.at());
 }
 
@@ -87,7 +87,7 @@ pub impl Show for Op with output(self, logger) {
   logger.write_string(self.dump(0));
 }
 
-pub fn Op::append_region(self: Op) -> Region {
+pub fn Op::appendRegion(self: Op) -> Region {
   let region = Region::new(self);
   self.regions.push(region);
   return region;
@@ -110,29 +110,29 @@ pub fn Op::block(self: Op) -> Block {
 ///|
 /// Returns true if the operation is of kind `kind`.
 /// 
-pub fn Op::isa(self:Op, kind: OpType) -> Bool {
+pub fn Op::isa(self:Op, kind: OpKind) -> Bool {
   return self.kind == kind;
 }
 
-pub fn Op::is_any(self: Op, kinds: Array[OpType]) -> Bool {
+pub fn Op::isAny(self: Op, kinds: Array[OpKind]) -> Bool {
   return @utils.any(kinds, self.isa(_));
 }
 
-pub fn Op::move_to_end(self: Op, bb: Block) -> Unit {
+pub fn Op::moveToEnd(self: Op, bb: Block) -> Unit {
   self.parent().ops.erase(self.at());
   bb.ops.push_back(self);
   self.parent = Some(bb);
   self.at = bb.end().prev() |> Some;
 }
 
-pub fn Op::move_to_start(self: Op, bb: Block) -> Unit {
+pub fn Op::moveToStart(self: Op, bb: Block) -> Unit {
   self.parent().ops.erase(self.at());
   bb.ops.insert(bb.begin(), self);
   self.parent = Some(bb);
   self.at = bb.begin() |> Some;
 }
 
-pub fn Op::move_before(self: Op, other: Op) -> Unit {
+pub fn Op::moveBefore(self: Op, other: Op) -> Unit {
   self.parent().ops.erase(self.at());
   let bb = other.parent();
   bb.ops.insert(other.at(), self);
@@ -140,7 +140,7 @@ pub fn Op::move_before(self: Op, other: Op) -> Unit {
   self.at = other.at().prev() |> Some;
 }
 
-pub fn Op::move_after(self: Op, other: Op) -> Unit {
+pub fn Op::moveAfter(self: Op, other: Op) -> Unit {
   self.parent().ops.erase(self.at());
   let bb = other.parent();
   bb.ops.insert(other.at().next(), self);
@@ -148,7 +148,7 @@ pub fn Op::move_after(self: Op, other: Op) -> Unit {
   self.at = other.at().next() |> Some;
 }
 
-pub fn Op::find_all(self: Op, kind: OpType) -> Array[Op] {
+pub fn Op::findAll(self: Op, kind: OpKind) -> Array[Op] {
   let result = [];
   if (self.isa(kind)) {
     result.push(self);
@@ -156,9 +156,36 @@ pub fn Op::find_all(self: Op, kind: OpType) -> Array[Op] {
   for region in self.regions {
     for bb in region {
       for op in bb {
-        result.append(op.find_all(kind));
+        result.append(op.findAll(kind));
       }
     }
   }
   return result;
+}
+
+pub fn Op::replaceAllUsesWith(self: Op, other: Op) -> Unit {
+  for x in self.uses {
+    let operands = x.operands.iter() |> Array::from_iter();
+    for i, w in operands {
+      if (w == self) {
+        x.setOperand(i, other);
+      }
+    }
+  }
+}
+
+pub fn Op::setOperand(self: Op, i: Int, v: Op) -> Unit {
+  let op = self.operands[i];
+  self.operands[i] = v;
+  op.removeUser(self);
+  v.uses.push(self);
+}
+
+pub fn Op::pushOperand(self: Op, operand: Op) -> Unit {
+  self.operands.push(operand);
+  operand.uses.push(self);
+}
+
+pub fn Op::add(self: Op, x: Attr) -> Unit {
+  self.attrs.push(x);
 }

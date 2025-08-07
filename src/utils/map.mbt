@@ -58,3 +58,7 @@ pub fn[K: Eq + Hash, V] Map::contains(self: Map[K, V], k: K) -> Bool {
 pub fn[K: Eq + Hash, V] Map::clone(self: Map[K, V]) -> Map[K, V] {
   Map::from_array(self.inner().to_array());
 }
+
+pub fn[K, V] Map::clear(self: Map[K, V]) -> Unit {
+  self.inner().clear();
+}

@@ -27,6 +27,13 @@ pub fn Type::ptr(self: Type) -> Type {
   return ptr(self);
 }
 
+///|
+/// Returns whether the type is a floating-point pointer.
+/// 
+pub fn Type::fp(self: Type) -> Bool {
+  return self.name == "ptr" && self.subtypes[0].name == "f64";
+}
+
 pub let i32: Type = Type::new("i32");
 pub let f64: Type = Type::new("f64");
 pub let unit: Type = Type::new("unit");

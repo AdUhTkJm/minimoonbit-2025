@@ -16,7 +16,7 @@ pub fn SymbolTable::op_get(self: SymbolTable, name: String) -> Op {
   if (!self.globals.contains(name)) {
     die("unknown identifier: \{name}")
   }
-  return self.builder.create(GetGlobal, self.globals[name], [], attrs=[Name(name)]);
+  return self.builder.create(GetGlobalOp, self.globals[name], [], attrs=[Name(name)]);
 }
 
 pub fn SymbolTable::op_set(self: SymbolTable, name: String, addr: Op) -> Unit {
@@ -72,12 +72,12 @@ pub fn CodeGen::stmt(self: CodeGen, x: AST, ctx~: Ctx = Load) -> Op {
     Block(arr) => {
       // Create a scope.
       let subgen = self.clone();
-      subgen.builder.set_to(builder.insertion_point());
+      subgen.builder.setTo(builder.getInsertionPoint());
       let last = arr.map(subgen.stmt(_)).last();
       if (last is Some(x)) {
         return x;
       }
-      return builder.create(MakeUnit, unit, []);
+      return builder.create(MakeUnitOp, unit, []);
     }
     BinOp(kind, l, r) => {
       if (kind is And) {
@@ -89,83 +89,83 @@ pub fn CodeGen::stmt(self: CodeGen, x: AST, ctx~: Ctx = Load) -> Op {
       let l = self.stmt(l);
       let r = self.stmt(r);
       let (kind, ty) = match kind {
-        Add => (Add, l.ty)
-        Sub => (Sub, l.ty)
-        Mul => (Mul, l.ty)
-        Div => (Div, l.ty)
-        Mod => (Mod, l.ty)
-        Ne => (Ne, bool)
-        Eq => (Eq, bool)
-        Lt => (Lt, bool)
-        Le => (Le, bool)
+        Add => (AddOp, l.ty)
+        Sub => (SubOp, l.ty)
+        Mul => (MulOp, l.ty)
+        Div => (DivOp, l.ty)
+        Mod => (ModOp, l.ty)
+        Ne => (NeOp, bool)
+        Eq => (EqOp, bool)
+        Lt => (LtOp, bool)
+        Le => (LeOp, bool)
         _ => panic()
       }
       return builder.create(kind, ty, [l, r])
     }
     Let({ name, init, ty }) => {
-      let addr = builder.create(Alloca, cvt(ty).ptr(), [], attrs=[Name(name)]);
+      let addr = builder.create(AllocaOp, cvt(ty).ptr(), [], attrs=[Name(name)]);
       self.symtbl[name] = addr;
       let value = self.stmt(init);
-      builder.creates(Store, unit, [value, addr]);
-      return builder.create(MakeUnit, unit, []);
+      builder.creates(StoreOp, unit, [value, addr]);
+      return builder.create(MakeUnitOp, unit, []);
     }
     Call(func, args) => {
       let func = self.stmt(func);
       let args = args.map(self.stmt(_));
-      return builder.create(Call, self[x], [func, ..args]);
+      return builder.create(CallOp, self[x], [func, ..args]);
     }
     Var(name) => {
       let addr = self.symtbl[name];
       if (ctx is Store) {
         return addr;
       }
-      return builder.create(Load, self[x], [addr]);
+      return builder.create(LoadOp, self[x], [addr]);
     }
-    Int(x) => builder.create(Int, i32, [], attrs=[Int(x)]);
-    Double(x) => builder.create(Double, i32, [], attrs=[Double(x)]);
+    Int(x) => builder.create(IntOp, i32, [], attrs=[Int(x)]);
+    Double(x) => builder.create(DoubleOp, i32, [], attrs=[Double(x)]);
     Assign(tgt, value) => {
       let addr = self.stmt(tgt, ctx=Store);
       let value = self.stmt(value);
-      builder.creates(Store, unit, [value, addr]);
-      return builder.create(MakeUnit, unit, []);
+      builder.creates(StoreOp, unit, [value, addr]);
+      return builder.create(MakeUnitOp, unit, []);
     }
     CompoundAssign(bkind, tgt, value) => {
       let addr = self.stmt(tgt, ctx=Store);
       let value = self.stmt(value);
-      let load = builder.create(Load, self[tgt], [addr]);
+      let load = builder.create(LoadOp, self[tgt], [addr]);
       let modif = builder.create(match bkind {
-        Add => Add; Sub => Sub; Mul => Mul; Div => Div; Mod => Mod;
+        Add => AddOp; Sub => SubOp; Mul => MulOp; Div => DivOp; Mod => ModOp;
         _ => panic()
       }, self[tgt], [load, value]);
-      builder.creates(Store, unit, [modif, addr]);
-      return builder.create(MakeUnit, unit, []);
+      builder.creates(StoreOp, unit, [modif, addr]);
+      return builder.create(MakeUnitOp, unit, []);
     }
     While(cond, body) => {
       let cond = self.stmt(cond);
-      let _while = builder.create(While, unit, [cond]);
-      let region = _while.append_region();
-      let block = region.append_block();
-      let point = builder.insertion_point();
-      builder.set_to_start(block);
+      let _while = builder.create(WhileOp, unit, [cond]);
+      let region = _while.appendRegion();
+      let block = region.appendBlock();
+      let point = builder.getInsertionPoint();
+      builder.setToBlockStart(block);
       self.stmt(body) |> ignore;
-      builder.set_to(point);
+      builder.setTo(point);
       return _while;
     }
     If(cond, ifso, ifnot) => {
       let cond = self.stmt(cond);
-      let _if = builder.create(If, self[x], [cond]);
-      let region = _if.append_region();
-      let block = region.append_block();
-      let point = builder.insertion_point();
-      builder.set_to_start(block);
+      let _if = builder.create(IfOp, self[x], [cond]);
+      let region = _if.appendRegion();
+      let block = region.appendBlock();
+      let point = builder.getInsertionPoint();
+      builder.setToBlockStart(block);
       self.stmt(ifso) |> ignore;
       if (ifnot is Some(ifnot)) {
-        let region = _if.append_region();
-        let block = region.append_block();
-        builder.set_to_start(block);
+        let region = _if.appendRegion();
+        let block = region.appendBlock();
+        builder.setToBlockStart(block);
         self.stmt(ifnot) |> ignore;
       }
-      builder.set_to(point);
+      builder.setTo(point);
       return _if;
     }
     _ => die("unknown statement: \{x}")
@@ -176,38 +176,38 @@ pub fn CodeGen::top(self: CodeGen, x: AST) -> Unit {
   let builder = self.builder;
   match x {
     Fn(detail) => {
-      let f = builder.create(Func, unit, [], attrs=[ArgCount(detail.args.length()), Name(detail.name)]);
-      let region = f.append_region();
-      let block = region.append_block();
+      let f = builder.create(FuncOp, unit, [], attrs=[ArgCount(detail.args.length()), Name(detail.name)]);
+      let region = f.appendRegion();
+      let block = region.appendBlock();
       let subgen = self.clone();
       self.symtbl.globals[detail.name] = cvt(Function(detail.retTy, detail.args.map((x) => x.1)));
-      subgen.builder.set_to_start(block);
+      subgen.builder.setToBlockStart(block);
       for i, x in detail.args {
-        subgen.symtbl[x.0] = subgen.builder.create(GetArg, cvt(x.1).ptr(), [], attrs=[Int(i)]);
+        subgen.symtbl[x.0] = subgen.builder.create(GetArgOp, cvt(x.1).ptr(), [], attrs=[Int(i)]);
       }
       subgen.stmt(detail.body) |> ignore;
     }
     Let({ name, init, ty }) => {
-      let addr = builder.create(Global, cvt(ty).ptr(), [], attrs=[Name(name)]);
+      let addr = builder.create(GlobalOp, cvt(ty).ptr(), [], attrs=[Name(name)]);
       self.symtbl.globals[name] = ty |> cvt;
-      let point = builder.insertion_point();
-      builder.set_to_end(self.init.block());
+      let point = builder.getInsertionPoint();
+      builder.setToBlockEnd(self.init.block());
       let value = self.stmt(init);
-      builder.creates(Store, unit, [value, addr]);
-      builder.set_to(point);
+      builder.creates(StoreOp, unit, [value, addr]);
+      builder.setTo(point);
     }
     _ => die("unknown toplevel: \{x}")
   }
 }
 
 pub fn CodeGen::build(self: CodeGen, x: AST) -> Op {
-  let module = Builder::create_module();
-  let region = module.append_region();
-  self.builder.set_to_start(region.append_block());
+  let module = Builder::createModule();
+  let region = module.appendRegion();
+  self.builder.setToBlockStart(region.appendBlock());
   // Create an __init() function.
-  self.init = self.builder.create(Func, unit, [], attrs=[Name("__init")]);
-  let region = self.init.append_region();
-  region.append_block() |> ignore;
+  self.init = self.builder.create(FuncOp, unit, [], attrs=[Name("__init")]);
+  let region = self.init.appendRegion();
+  region.appendBlock() |> ignore;
   guard x is Block(arr);
   for x in arr {
     self.top(x);
