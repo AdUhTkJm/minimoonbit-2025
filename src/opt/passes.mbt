@@ -6,14 +6,14 @@ pub(all) struct Dce {
 }
 
 pub impl Pass for Dce with name(_self) {
-  return "DCE";
+  return "dce";
 }
 
 pub impl Pass for Dce with operate(self) {
   Dce::run(self);
 }
 
-pub fn create_DCE(module: Op) -> Dce {
+pub fn create_dce(module: Op) -> Dce {
   return Dce :: { module }
 }
 

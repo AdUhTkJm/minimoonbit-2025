@@ -190,8 +190,10 @@ pub fn Op::findAll(self: Op, kind: OpKind) -> Array[Op] {
 }
 
 pub fn Op::replaceAllUsesWith(self: Op, other: Op) -> Unit {
-  for x in self.uses {
-    let operands = x.operands.iter() |> Array::from_iter();
+  // We are modifying `uses` and `operands` in place.
+  let uses = self.uses[:].to_array();
+  for x in uses {
+    let operands = x.operands[:].to_array();
     for i, w in operands {
       if (w == self) {
         x.setOperand(i, other);

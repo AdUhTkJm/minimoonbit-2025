@@ -166,6 +166,6 @@ fn Mem2Reg::fillPhi(self: Mem2Reg, bb: Block, symbols: Map[Op, Op]) -> Unit {
   }
   
   for child in self.domtree[bb] {
-    self.fillPhi(child, symbols);
+    self.fillPhi(child, symbols.clone());
   }
 }

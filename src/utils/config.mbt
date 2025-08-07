@@ -5,7 +5,7 @@ pub(all) struct Config {
   mut print_before: String
   mut dump_ast: Bool
   mut with_type: Bool
-} derive(Default)
+} derive(Default, Show)
 
 pub let config: Config = Config::default();
 
@@ -18,12 +18,12 @@ pub fn parse(args: Array[String]) -> Unit {
       i += 2;
       continue;
     }
-    if (args[i] == "-p") {
+    if (args[i] == "-p" || args[i] == "--print-after") {
       config.print_after = args[i + 1];
       i += 2;
       continue;
     }
-    if (args[i] == "-q") {
+    if (args[i] == "-q" || args[i] == "--print-before") {
       config.print_before = args[i + 1];
       i += 2;
       continue;

@@ -1,4 +1,4 @@
-fn fkattenIf(func: Op) -> Bool {
+fn flattenIf(func: Op) -> Bool {
   let builder = Builder::new();
   let region = func.region();
   for bb in region {
@@ -39,7 +39,8 @@ fn fkattenIf(func: Op) -> Bool {
 
       // Create a branch at `parent`.
       builder.setToBlockEnd(parent);
-      builder.creates(BrOp, unit, [], attrs=[Target(ifso), Else(_else)]);
+      let cond = op.def(0);
+      builder.creates(BrOp, unit, [cond], attrs=[Target(ifso), Else(_else)]);
 
       // Erase the `if` itself.
       op.erase();
@@ -62,10 +63,12 @@ fn flattenWhile(func: Op) -> Bool {
         continue;
       }
 
-      let header = op.parent();
-      let exit = header.split(op);
+      let preheader = op.parent();
+      let exit = preheader.split(op);
       
+      // Create an empty block as header.
       // Move the while's body between header and exit.
+      let header = region.insertAfter(preheader);
       let body = region.insertAfter(header);
       let ops = op.block().ops();
       for op in ops {
@@ -74,10 +77,15 @@ fn flattenWhile(func: Op) -> Bool {
 
       // The condition must be checked by `bb`.
       builder.setToBlockEnd(header);
-      builder.creates(BrOp, unit, [], attrs=[Target(body), Else(exit)]);
+      let cond = op.def(0);
+      builder.creates(BrOp, unit, [cond], attrs=[Target(body), Else(exit)]);
 
       // The loop jumps back to header.
       builder.setToBlockEnd(body);
+      builder.creates(GotoOp, unit, [], attrs=[Target(header)]);
+
+      // The preheader jumps to header.
+      builder.setToBlockEnd(preheader);
       builder.creates(GotoOp, unit, [], attrs=[Target(header)]);
 
       // Erase the while itself.
@@ -92,7 +100,7 @@ pub fn Flatten::runImpl(func: Op) -> Unit {
   let mut changed = true;
   while (changed) {
     changed = false;
-    changed = changed || fkattenIf(func);
+    changed = changed || flattenIf(func);
     changed = changed || flattenWhile(func);
   }
 
