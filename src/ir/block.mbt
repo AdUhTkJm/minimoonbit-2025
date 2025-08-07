@@ -140,3 +140,14 @@ pub fn Block::getPhis(self: Block) -> Array[Op] {
   }
   return phis;
 }
+
+pub fn Block::erase(self: Block) -> Unit {
+  let copy = self.ops.to_array();
+  for op in copy {
+    op.removeAllOperands();
+  }
+  for op in copy {
+    op.erase();
+  }
+  self.parent.bbs.erase(self.at);
+}

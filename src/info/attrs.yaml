@@ -12,7 +12,7 @@ arg_count:
 
 from:
   fields: Array[Block]
-  format: <from = \{$0}>
+  format: <from = \{$0.map((x) => x.id)}>
 
 name:
   fields: String

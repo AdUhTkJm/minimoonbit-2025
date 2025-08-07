@@ -159,3 +159,19 @@ pub fn Region::domtree(self: Region) -> Map[Block, Array[Block]] {
   }
   return result;
 }
+
+pub fn Region::erase(self: Region) -> Unit {
+  for bb in self.bbs {
+    for op in bb {
+      op.removeAllOperands();
+      for region in op.regions {
+        region.erase();
+      }
+    }
+  }
+  let copy = self.bbs.to_array();
+  for bb in copy {
+    bb.erase();
+  }
+  self.parent.removeRegion(self);
+}

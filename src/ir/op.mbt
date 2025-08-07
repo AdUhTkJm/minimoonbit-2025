@@ -1,10 +1,10 @@
 pub(all) struct Op {
   id: Int
   kind: OpKind
-  ty: Type
-  operands: Array[Op]
+  mut ty: Type
+  mut operands: Array[Op]
   mut attrs: Array[Attr]
-  regions: Array[Region]
+  mut regions: Array[Region]
 
   mut parent: Block?
   mut at: Node[Op]?
@@ -30,7 +30,11 @@ let openv: OpEnv = { cnt: 0 };
 pub fn Op::build(kind: OpKind, ty: Type, operands: Array[Op], attrs~: Array[Attr] = [], parent: Block?, at: Node[Op]?) -> Op {
   let cnt = openv.cnt;
   openv.cnt += 1;
-  { id: cnt, kind, ty, operands, attrs, regions: [], parent, at, uses: operands.iter() |> Array::from_iter }
+  let self = { id: cnt, kind, ty, operands, attrs, regions: [], parent, at, uses: [] };
+  for x in operands {
+    x.uses.push(self);
+  }
+  return self;
 }
 
 ///|
@@ -56,7 +60,10 @@ pub fn Op::at(self: Op) -> Node[Op] {
   return self.at.unwrap();
 }
 
-pub fn Op::removeUser(self: Op, other: Op) -> Unit {
+///|
+/// Removes `other` from `self`'s uses.
+/// 
+pub fn Op::removeUse(self: Op, other: Op) -> Unit {
   for i, user in self.uses {
     if (user == other) {
       self.uses = self.uses[:i].to_array() + self.uses[i+1:].to_array();
@@ -66,11 +73,30 @@ pub fn Op::removeUser(self: Op, other: Op) -> Unit {
 }
 
 ///|
+/// `Self` is no longer using `other`, so `other`'s uses should no longer contain `self`.
+/// 
+pub fn Op::stopUsing(self: Op, other: Op) -> Unit {
+  other.removeUse(self);
+}
+
+///|
 /// Removes self from parent.
 /// 
 pub fn Op::erase(self: Op) -> Unit {
-  guard self.uses.is_empty();
+  if (!self.uses.is_empty()) {
+    println("removing non-empty op: \{self}");
+    println("uses:")
+    for x in self.uses {
+      println(x);
+    }
+    panic();
+  }
   self.parent().ops.erase(self.at());
+  self.removeAllOperands();
+  let regions = self.regions[:].to_array();
+  for region in regions {
+    region.erase();
+  }
 }
 
 pub fn Op::dump(self: Op, depth: Int) -> String {
@@ -177,7 +203,7 @@ pub fn Op::replaceAllUsesWith(self: Op, other: Op) -> Unit {
 pub fn Op::setOperand(self: Op, i: Int, v: Op) -> Unit {
   let op = self.operands[i];
   self.operands[i] = v;
-  op.removeUser(self);
+  self.stopUsing(op);
   v.uses.push(self);
 }
 
@@ -188,4 +214,19 @@ pub fn Op::pushOperand(self: Op, operand: Op) -> Unit {
 
 pub fn Op::add(self: Op, x: Attr) -> Unit {
   self.attrs.push(x);
+}
+
+pub fn Op::removeAllOperands(self: Op) -> Unit {
+  for x in self.operands {
+    self.stopUsing(x);
+  }
+  self.operands = [];
+}
+
+pub fn Op::removeRegion(self: Op, region: Region) -> Unit {
+  for i, x in self.regions {
+    if (physical_equal(x, region)) {
+      self.regions = self.regions[:i].to_array() + self.regions[i+1:].to_array();
+    }
+  }
 }

@@ -214,7 +214,7 @@ pub impl Show for Attr with output(self, logger) {
     Int(_0) => "<\{_0}>"
     Double(_0) => "<\{_0}>"
     ArgCount(_0) => "<count = \{_0}>"
-    From(_0) => "<from = \{_0}>"
+    From(_0) => "<from = \{_0.map((x) => x.id)}>"
     Name(_0) => "<name = \{_0}>"
     Impure => "<impure>"
     Target(_0) => "<bb\{_0.id}>"

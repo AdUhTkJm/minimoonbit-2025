@@ -1,6 +1,43 @@
 // Auto generated. Do not edit!
 
 
+pub(all) struct Dce {
+  mut module: Op
+}
+
+pub impl Pass for Dce with name(_self) {
+  return "DCE";
+}
+
+pub impl Pass for Dce with operate(self) {
+  Dce::run(self);
+}
+
+pub fn create_DCE(module: Op) -> Dce {
+  return Dce :: { module }
+}
+
+pub fn Dce::funcs(self: Dce) -> Array[Op] {
+  let bb = self.module.region().block();
+  let result = [];
+  for op in bb {
+    if (isa[FuncOp](op)) {
+      result.push(op);
+    }
+  }
+  return result;
+}
+pub fn Dce::globals(self: Dce) -> Array[Op] {
+  let bb = self.module.region().block();
+  let result = [];
+  for op in bb {
+    if (isa[GlobalOp](op)) {
+      result.push(op);
+    }
+  }
+  return result;
+}
+
 pub(all) struct Flatten {
   mut module: Op
 }
