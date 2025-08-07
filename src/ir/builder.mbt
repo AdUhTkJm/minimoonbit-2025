@@ -42,6 +42,13 @@ pub fn Builder::creates(self: Builder, kind: OpKind, ty: Type, operands: Array[O
   self.create(kind, ty, operands, attrs~) |> ignore;
 }
 
+pub fn Builder::replace(self: Builder, op: Op, kind: OpKind, ty: Type, operands: Array[Op], attrs~: Array[Attr]=[]) -> Unit {
+  self.setAfterOp(op);
+  let created = self.create(kind, ty, operands, attrs~);
+  op.replaceAllUsesWith(created);
+  op.erase();
+}
+
 pub fn Builder::createInt(self: Builder, x: Int) -> Op {
   return self.create(IntOp, i32, [], attrs=[Int(x)])
 }

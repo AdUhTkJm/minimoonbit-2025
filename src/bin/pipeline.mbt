@@ -5,5 +5,7 @@ pub fn opt(module: @ir.Op) -> @opt.PassManager {
   pm.add(@opt.create_move_alloca(module));
   pm.add(@opt.create_flatten(module));
   pm.add(@opt.create_mem2reg(module));
+  pm.add(@opt.create_dce(module));
+  pm.add(@opt.create_lower(module));
   return pm;
 }

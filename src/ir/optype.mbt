@@ -35,6 +35,45 @@ pub(all) enum OpKind {
   BrOp
   GotoOp
   ReturnOp
+  LiOp
+  LaOp
+  AddiOp
+  AddwOp
+  SubwOp
+  MulwOp
+  DivwOp
+  DivuOp
+  DivuwOp
+  RemOp
+  RemwOp
+  RemuOp
+  RemuwOp
+  LdOp
+  SdOp
+  LwOp
+  SwOp
+  FldOp
+  FsdOp
+  RetOp
+  JOp
+  BeqOp
+  BneOp
+  BltOp
+  BleOp
+  BgtOp
+  BgeOp
+  AndiOp
+  OriOp
+  XorOp
+  XoriOp
+  SllOp
+  SlliOp
+  SrlOp
+  SrliOp
+  SraOp
+  SraiOp
+  MvOp
+  FmvOp
 } derive(Eq, Hash)
 
 pub impl Default for OpKind with default() {
@@ -77,6 +116,45 @@ pub impl Show for OpKind with output(self, logger) {
     BrOp => "br"
     GotoOp => "goto"
     ReturnOp => "return"
+    LiOp => "li"
+    LaOp => "la"
+    AddiOp => "addi"
+    AddwOp => "addw"
+    SubwOp => "subw"
+    MulwOp => "mulw"
+    DivwOp => "divw"
+    DivuOp => "divu"
+    DivuwOp => "divuw"
+    RemOp => "rem"
+    RemwOp => "remw"
+    RemuOp => "remu"
+    RemuwOp => "remuw"
+    LdOp => "ld"
+    SdOp => "sd"
+    LwOp => "lw"
+    SwOp => "sw"
+    FldOp => "fld"
+    FsdOp => "fsd"
+    RetOp => "ret"
+    JOp => "j"
+    BeqOp => "beq"
+    BneOp => "bne"
+    BltOp => "blt"
+    BleOp => "ble"
+    BgtOp => "bgt"
+    BgeOp => "bge"
+    AndiOp => "andi"
+    OriOp => "ori"
+    XorOp => "xor"
+    XoriOp => "xori"
+    SllOp => "sll"
+    SlliOp => "slli"
+    SrlOp => "srl"
+    SrliOp => "srli"
+    SraOp => "sra"
+    SraiOp => "srai"
+    MvOp => "mv"
+    FmvOp => "fmv"
   };
   logger.write_string(str);
 }

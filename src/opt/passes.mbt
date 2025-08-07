@@ -152,3 +152,40 @@ pub fn Mem2Reg::globals(self: Mem2Reg) -> Array[Op] {
   }
   return result;
 }
+
+pub(all) struct Lower {
+  mut module: Op
+}
+
+pub impl Pass for Lower with name(_self) {
+  return "lower";
+}
+
+pub impl Pass for Lower with operate(self) {
+  Lower::run(self);
+}
+
+pub fn create_lower(module: Op) -> Lower {
+  return Lower :: { module }
+}
+
+pub fn Lower::funcs(self: Lower) -> Array[Op] {
+  let bb = self.module.region().block();
+  let result = [];
+  for op in bb {
+    if (isa[FuncOp](op)) {
+      result.push(op);
+    }
+  }
+  return result;
+}
+pub fn Lower::globals(self: Lower) -> Array[Op] {
+  let bb = self.module.region().block();
+  let result = [];
+  for op in bb {
+    if (isa[GlobalOp](op)) {
+      result.push(op);
+    }
+  }
+  return result;
+}

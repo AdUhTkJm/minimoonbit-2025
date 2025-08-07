@@ -123,6 +123,10 @@ pub fn Lexer::next(self: Lexer) -> Token {
       if (self.check("=")) {
         return DivEq;
       }
+      if (self.check("/")) {
+        while (self.ch() != '\n') {}
+        return self.next();
+      }
       return Div;
     }
     '%' => {
