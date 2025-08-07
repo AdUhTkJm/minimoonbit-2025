@@ -4,22 +4,25 @@ pub fn impure(op: Op) -> Bool {
 
 pub fn Dce::run(self: Dce) -> Unit {
   for x in self.funcs() {
-    Dce::runImpl(x.region());
+    while (Dce::runImpl(x.region())) {}
   }
 }
 
-pub fn Dce::runImpl(region: Region) -> Unit {
+pub fn Dce::runImpl(region: Region) -> Bool {
+  let mut changed = false;
   for bb in region {
     let ops = bb.ops.iter() |> Array::from_iter();
     for op in ops {
       if (op.uses.is_empty() && !impure(op)) {
+        changed = true;
         op.erase();
         continue;
       }
 
       for x in op.regions {
-        Dce::runImpl(x);
+        changed = Dce::runImpl(x) || changed;
       }
     }
   }
+  return changed;
 }

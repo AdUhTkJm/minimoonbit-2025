@@ -28,3 +28,7 @@ target:
 _else:
   fields: Block
   format: <else = bb\{$0.id}>
+
+reg:
+  fields: Int
+  format: <\{reg($0)}>

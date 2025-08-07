@@ -218,7 +218,8 @@ pub fn CodeGen::top(self: CodeGen, x: AST) -> Unit {
       for i, x in detail.args {
         subgen.symtbl[x.0] = subgen.builder.create(GetArgOp, cvt(x.1).ptr(), [], attrs=[Int(i)]);
       }
-      subgen.stmt(detail.body) |> ignore;
+      let last = subgen.stmt(detail.body);
+      subgen.builder.creates(ReturnOp, unit, [last]);
     }
     Let({ name, init, ty }) => {
       let addr = builder.create(GlobalOp, cvt(ty).ptr(), [], attrs=[Name(name)]);

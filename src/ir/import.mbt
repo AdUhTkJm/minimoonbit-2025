@@ -1,4 +1,4 @@
 typealias @utils.(List, Node, Map)
 typealias @parse.(AST, TypingEnv)
 
-fnalias @utils.(die)
+fnalias @utils.(die, reg)

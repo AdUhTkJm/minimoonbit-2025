@@ -232,3 +232,9 @@ pub fn Op::removeRegion(self: Op, region: Region) -> Unit {
     }
   }
 }
+
+pub fn Op::removeOperand(self: Op, i: Int) -> Unit {
+  let x = self.operands[i];
+  self.stopUsing(x);
+  self.operands = self.operands[:i].to_array() + self.operands[i+1:].to_array();
+}

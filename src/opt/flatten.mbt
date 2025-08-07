@@ -101,8 +101,8 @@ pub fn Flatten::runImpl(func: Op) -> Unit {
   let mut changed = true;
   while (changed) {
     changed = false;
-    changed = changed || flattenIf(func);
-    changed = changed || flattenWhile(func);
+    changed = flattenIf(func) || changed;
+    changed = flattenWhile(func) || changed;
   }
 
   // Use `goto` to connect fall-through blocks together.

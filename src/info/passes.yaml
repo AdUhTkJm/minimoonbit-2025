@@ -8,9 +8,11 @@ passes:
     - domtree: ["Map[Block, Array[Block]]", "Map::new()"]
     - phiFrom: ["Map[Op, Op]", "Map::new()"]
   - lower
+  - resolve_call
 
 pipeline:
   - move_alloca
+  - resolve_call
   - flatten
   - mem2reg
   - dce

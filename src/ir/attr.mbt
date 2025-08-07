@@ -9,6 +9,7 @@ pub(all) enum Attr {
   Impure
   Target(Block)
   Else(Block)
+  Reg(Int)
 }
 
 pub fn Op::getInt(self: Op) -> Int {
@@ -209,6 +210,32 @@ pub fn Op::removeElse(self: Op) -> Unit {
     }
   }
 }
+
+pub fn Op::getReg(self: Op) -> Int {
+  for x in self.attrs {
+    if (x is Reg(_0)) {
+      return (_0);
+    }
+  }
+  die("no attribute 'reg'");
+}
+
+pub fn Op::hasReg(self: Op) -> Bool {
+  for x in self.attrs {
+    if (x is Reg(_)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+pub fn Op::removeReg(self: Op) -> Unit {
+  for i, x in self.attrs {
+    if (x is Reg(_)) {
+      self.attrs = self.attrs[:i].to_array() + self.attrs[i+1:].to_array();
+    }
+  }
+}
 pub impl Show for Attr with output(self, logger) {
   let str = match self {
     Int(_0) => "<\{_0}>"
@@ -219,6 +246,7 @@ pub impl Show for Attr with output(self, logger) {
     Impure => "<impure>"
     Target(_0) => "<bb\{_0.id}>"
     Else(_0) => "<else = bb\{_0.id}>"
+    Reg(_0) => "<\{reg(_0)}>"
   }
   logger.write_string(str);
 }

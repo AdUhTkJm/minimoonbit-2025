@@ -33,3 +33,5 @@ br
 goto
 return
 proceed
+read_reg
+write_reg

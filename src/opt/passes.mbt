@@ -189,3 +189,40 @@ pub fn Lower::globals(self: Lower) -> Array[Op] {
   }
   return result;
 }
+
+pub(all) struct ResolveCall {
+  mut module: Op
+}
+
+pub impl Pass for ResolveCall with name(_self) {
+  return "resolve-call";
+}
+
+pub impl Pass for ResolveCall with operate(self) {
+  ResolveCall::run(self);
+}
+
+pub fn create_resolve_call(module: Op) -> ResolveCall {
+  return ResolveCall :: { module }
+}
+
+pub fn ResolveCall::funcs(self: ResolveCall) -> Array[Op] {
+  let bb = self.module.region().block();
+  let result = [];
+  for op in bb {
+    if (isa[FuncOp](op)) {
+      result.push(op);
+    }
+  }
+  return result;
+}
+pub fn ResolveCall::globals(self: ResolveCall) -> Array[Op] {
+  let bb = self.module.region().block();
+  let result = [];
+  for op in bb {
+    if (isa[GlobalOp](op)) {
+      result.push(op);
+    }
+  }
+  return result;
+}
