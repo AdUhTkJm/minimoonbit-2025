@@ -193,3 +193,7 @@ pub fn[T] List::size(self: List[T]) -> Int {
 pub fn[T] List::length(self: List[T]) -> Int {
   return self.sz;
 }
+
+pub fn[T] List::back(self: List[T]) -> T {
+  return self.end.prev().v();
+}

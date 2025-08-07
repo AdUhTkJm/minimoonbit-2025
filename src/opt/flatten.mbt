@@ -95,6 +95,21 @@ pub fn Flatten::run_fn(func: Op) -> Unit {
     changed = changed || flatten_if(func);
     changed = changed || flatten_while(func);
   }
+
+  // Use `goto` to connect fall-through blocks together.
+  let region = func.region();
+  let builder = Builder::new();
+  for x in region {
+    if x.ops.length() == 0 || !x.back().is_any([Goto, Br, Return]) {
+      builder.set_to_end(x);
+      if x.at_back() {
+        builder.creates(Return, unit, []);
+        break;
+      }
+      let next = x.next();
+      builder.creates(Goto, unit, [], attrs=[Target(next)]);
+    }
+  }
 }
 
 pub fn Flatten::run(self: Flatten) -> Unit {

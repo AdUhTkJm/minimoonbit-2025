@@ -1,9 +1,10 @@
 passes:
-  # Flattens CFG.
   - flatten
-  # Moves `alloca` to functions' very beginning.
   - move_alloca
+  - mem2reg:
+    - visited: ["Set[Op]", "Set::new()"]
 
 pipeline:
   - move_alloca
   - flatten
+  - mem2reg

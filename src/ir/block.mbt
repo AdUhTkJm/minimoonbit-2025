@@ -1,8 +1,19 @@
 pub(all) struct Block {
-  id: Int
-  ops: List[Op]
+  mut id: Int
+  mut ops: List[Op]
   mut parent: Region
   mut at: Node[Block]
+  mut preds: Set[Block]
+  mut succs: Set[Block]
+  mut doms: Set[Block] // These are blocks that dominate this.
+}
+
+pub impl Eq for Block with op_equal(self, other) {
+  return physical_equal(self, other);
+}
+
+pub impl Hash for Block with hash_combine(self, hasher) {
+  hasher.combine_int(self.id);
 }
 
 priv struct BlockCounter {
@@ -14,13 +25,16 @@ let env: BlockCounter = { cnt: 0 };
 pub fn Block::new(parent: Region, at: Node[Block]) -> Block {
   let id = env.cnt;
   env.cnt += 1;
-  { id, ops: List::new(), parent, at }
+  { id, ops: List::new(), parent, at, preds: Set::new(), succs: Set::new(), doms: Set::new() }
 }
 
 pub fn Block::dump(self: Block, depth: Int, with_tag~: Bool=true) -> String {
   guard depth >= 1;
   let indent = String::make(depth * 2 - 2, ' ');
-  return (if (with_tag) { "\{indent}bb\{self.id}:\n" } else { "" }) + self.ops.to_array().map(_.dump(depth)).join("\n")
+  let preds = self.preds.iter().map((x) => x.id);
+  let doms = self.doms.iter().map((x) => x.id);
+  let tag = "\{indent}bb\{self.id}:    // preds = \{preds}, doms = \{doms}\n";
+  return (if (with_tag) { tag } else { "" }) + self.ops.to_array().map(_.dump(depth)).join("\n")
 }
 
 pub impl Show for Block with output(self, logger) {
@@ -69,4 +83,24 @@ pub fn Block::split_at(self: Block, at: Node[Op]) -> Block {
 /// 
 pub fn Block::ops(self: Block) -> List[Op] {
   return self.ops.to_array() |> List::from_array;
+}
+
+pub fn Block::dominates(self: Block, other: Block) -> Bool {
+  return other.doms.contains(self);
+}
+
+pub fn Block::dominated_by(self: Block, other: Block) -> Bool {
+  return other.dominates(self);
+}
+
+pub fn Block::back(self: Block) -> Op {
+  return self.ops.back();
+}
+
+pub fn Block::next(self: Block) -> Block {
+  return self.at.next().v();
+}
+
+pub fn Block::at_back(self: Block) -> Bool {
+  return self.at.next() == self.parent.bbs.end;
 }

@@ -59,3 +59,25 @@ pub fn Region::insert_after(self: Region, bb: Block) -> Block {
   block.at = bb.at.next();
   return block;
 }
+
+pub fn Region::update_preds(self: Region) -> Unit {
+  for bb in self.bbs {
+    let term = bb.back();
+    if term.has_target() {
+      bb.succs.add(term.target());
+    }
+    if term.has_else() {
+      bb.succs.add(term._else());
+    }
+  }
+
+  for bb in self.bbs {
+    for succ in bb.succs {
+      succ.preds.add(bb);
+    }
+  }
+}
+
+pub fn Region::update_doms(self: Region) -> Unit {
+  self.update_preds();
+}

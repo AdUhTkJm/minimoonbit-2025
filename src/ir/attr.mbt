@@ -153,7 +153,7 @@ pub impl Show for Attr with output(self, logger) {
     From(_0) => "<from = \{_0}>"
     Name(_0) => "<name = \{_0}>"
     Impure => "<impure>"
-    Target(_0) => "<target = bb\{_0.id}>"
+    Target(_0) => "<bb\{_0.id}>"
     Else(_0) => "<else = bb\{_0.id}>"
   }
   logger.write_string(str);

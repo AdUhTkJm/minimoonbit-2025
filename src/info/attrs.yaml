@@ -23,7 +23,7 @@ impure:
 
 target:
   fields: Block
-  format: <target = bb\{$0.id}>
+  format: <bb\{$0.id}>
 
 _else:
   fields: Block

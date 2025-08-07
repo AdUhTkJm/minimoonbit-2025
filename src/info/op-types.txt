@@ -31,3 +31,4 @@ lt
 le
 br
 goto
+return
