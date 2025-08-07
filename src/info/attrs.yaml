@@ -32,3 +32,37 @@ _else:
 reg:
   fields: Int
   format: <\{reg($0)}>
+
+rd:
+  fields: Int
+  format: <rd = \{reg($0)}>
+
+rs:
+  fields: Int
+  format: <rs = \{reg($0)}>
+
+rs2:
+  fields: Int
+  format: <rs2 = \{reg($0)}>
+
+spilled_rd:
+  fields:
+    - Bool  # isFloatingPoint
+    - Int   # stackOffset
+    - Op    # ref (of the spilled operation)
+  format: <rd = spilled \{$1}>
+
+spilled_rs:
+  fields:
+    - Bool
+    - Int
+    - Op
+  format: <rs = spilled \{$1}>
+
+spilled_rs2:
+  fields:
+    - Bool
+    - Int
+    - Op
+  format: <rs2 = spilled \{$1}>
+  

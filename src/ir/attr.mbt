@@ -10,6 +10,12 @@ pub(all) enum Attr {
   Target(Block)
   Else(Block)
   Reg(Int)
+  Rd(Int)
+  Rs(Int)
+  Rs2(Int)
+  SpilledRd(Bool, Int, Op)
+  SpilledRs(Bool, Int, Op)
+  SpilledRs2(Bool, Int, Op)
 }
 
 pub fn Op::getInt(self: Op) -> Int {
@@ -236,6 +242,162 @@ pub fn Op::removeReg(self: Op) -> Unit {
     }
   }
 }
+
+pub fn Op::getRd(self: Op) -> Int {
+  for x in self.attrs {
+    if (x is Rd(_0)) {
+      return (_0);
+    }
+  }
+  die("no attribute 'rd'");
+}
+
+pub fn Op::hasRd(self: Op) -> Bool {
+  for x in self.attrs {
+    if (x is Rd(_)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+pub fn Op::removeRd(self: Op) -> Unit {
+  for i, x in self.attrs {
+    if (x is Rd(_)) {
+      self.attrs = self.attrs[:i].to_array() + self.attrs[i+1:].to_array();
+    }
+  }
+}
+
+pub fn Op::getRs(self: Op) -> Int {
+  for x in self.attrs {
+    if (x is Rs(_0)) {
+      return (_0);
+    }
+  }
+  die("no attribute 'rs'");
+}
+
+pub fn Op::hasRs(self: Op) -> Bool {
+  for x in self.attrs {
+    if (x is Rs(_)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+pub fn Op::removeRs(self: Op) -> Unit {
+  for i, x in self.attrs {
+    if (x is Rs(_)) {
+      self.attrs = self.attrs[:i].to_array() + self.attrs[i+1:].to_array();
+    }
+  }
+}
+
+pub fn Op::getRs2(self: Op) -> Int {
+  for x in self.attrs {
+    if (x is Rs2(_0)) {
+      return (_0);
+    }
+  }
+  die("no attribute 'rs2'");
+}
+
+pub fn Op::hasRs2(self: Op) -> Bool {
+  for x in self.attrs {
+    if (x is Rs2(_)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+pub fn Op::removeRs2(self: Op) -> Unit {
+  for i, x in self.attrs {
+    if (x is Rs2(_)) {
+      self.attrs = self.attrs[:i].to_array() + self.attrs[i+1:].to_array();
+    }
+  }
+}
+
+pub fn Op::getSpilledRd(self: Op) -> (Bool, Int, Op) {
+  for x in self.attrs {
+    if (x is SpilledRd(_0, _1, _2)) {
+      return (_0, _1, _2);
+    }
+  }
+  die("no attribute 'spilled_rd'");
+}
+
+pub fn Op::hasSpilledRd(self: Op) -> Bool {
+  for x in self.attrs {
+    if (x is SpilledRd(_)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+pub fn Op::removeSpilledRd(self: Op) -> Unit {
+  for i, x in self.attrs {
+    if (x is SpilledRd(_)) {
+      self.attrs = self.attrs[:i].to_array() + self.attrs[i+1:].to_array();
+    }
+  }
+}
+
+pub fn Op::getSpilledRs(self: Op) -> (Bool, Int, Op) {
+  for x in self.attrs {
+    if (x is SpilledRs(_0, _1, _2)) {
+      return (_0, _1, _2);
+    }
+  }
+  die("no attribute 'spilled_rs'");
+}
+
+pub fn Op::hasSpilledRs(self: Op) -> Bool {
+  for x in self.attrs {
+    if (x is SpilledRs(_)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+pub fn Op::removeSpilledRs(self: Op) -> Unit {
+  for i, x in self.attrs {
+    if (x is SpilledRs(_)) {
+      self.attrs = self.attrs[:i].to_array() + self.attrs[i+1:].to_array();
+    }
+  }
+}
+
+pub fn Op::getSpilledRs2(self: Op) -> (Bool, Int, Op) {
+  for x in self.attrs {
+    if (x is SpilledRs2(_0, _1, _2)) {
+      return (_0, _1, _2);
+    }
+  }
+  die("no attribute 'spilled_rs2'");
+}
+
+pub fn Op::hasSpilledRs2(self: Op) -> Bool {
+  for x in self.attrs {
+    if (x is SpilledRs2(_)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+pub fn Op::removeSpilledRs2(self: Op) -> Unit {
+  for i, x in self.attrs {
+    if (x is SpilledRs2(_)) {
+      self.attrs = self.attrs[:i].to_array() + self.attrs[i+1:].to_array();
+    }
+  }
+}
 pub impl Show for Attr with output(self, logger) {
   let str = match self {
     Int(_0) => "<\{_0}>"
@@ -247,6 +409,12 @@ pub impl Show for Attr with output(self, logger) {
     Target(_0) => "<bb\{_0.id}>"
     Else(_0) => "<else = bb\{_0.id}>"
     Reg(_0) => "<\{reg(_0)}>"
+    Rd(_0) => "<rd = \{reg(_0)}>"
+    Rs(_0) => "<rs = \{reg(_0)}>"
+    Rs2(_0) => "<rs2 = \{reg(_0)}>"
+    SpilledRd(_0, _1, _2) => "<rd = spilled \{_1}>"
+    SpilledRs(_0, _1, _2) => "<rs = spilled \{_1}>"
+    SpilledRs2(_0, _1, _2) => "<rs2 = spilled \{_1}>"
   }
   logger.write_string(str);
 }

@@ -44,3 +44,6 @@ sra
 srai
 mv
 fmv
+read_reg
+write_reg
+sub_sp

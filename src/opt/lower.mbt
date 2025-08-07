@@ -15,6 +15,7 @@ pub fn Lower::runImpl(func: Op) -> Unit {
   }
   replace(IntOp, LiOp);
   replace(GetGlobalOp, LaOp);
+  replace(GotoOp, JOp);
   
   // Lower loads.
   let all = func.findAll(LoadOp);
@@ -54,6 +55,7 @@ pub fn Lower::runImpl(func: Op) -> Unit {
 
     builder.setBeforeOp(x);
     let a0 = builder.create(WriteRegOp, unit, [x.def(0)], attrs=[Reg(a0)])
+    builder.replace(x, RetOp, x.ty, x.getOperands(), attrs=x.attrs);
   }
 
   // Lower calls.

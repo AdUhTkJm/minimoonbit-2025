@@ -36,9 +36,6 @@ pub(all) enum OpKind {
   GotoOp
   ReturnOp
   ProceedOp
-  ReadRegOp
-  WriteRegOp
-  SubSpOp
   LiOp
   LaOp
   AddiOp
@@ -78,6 +75,9 @@ pub(all) enum OpKind {
   SraiOp
   MvOp
   FmvOp
+  ReadRegOp
+  WriteRegOp
+  SubSpOp
 } derive(Eq, Hash)
 
 pub impl Default for OpKind with default() {
@@ -121,9 +121,6 @@ pub impl Show for OpKind with output(self, logger) {
     GotoOp => "goto"
     ReturnOp => "return"
     ProceedOp => "proceed"
-    ReadRegOp => "read_reg"
-    WriteRegOp => "write_reg"
-    SubSpOp => "sub_sp"
     LiOp => "li"
     LaOp => "la"
     AddiOp => "addi"
@@ -163,6 +160,9 @@ pub impl Show for OpKind with output(self, logger) {
     SraiOp => "srai"
     MvOp => "mv"
     FmvOp => "fmv"
+    ReadRegOp => "read_reg"
+    WriteRegOp => "write_reg"
+    SubSpOp => "sub_sp"
   };
   logger.write_string(str);
 }

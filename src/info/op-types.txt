@@ -33,6 +33,3 @@ br
 goto
 return
 proceed
-read_reg
-write_reg
-sub_sp
