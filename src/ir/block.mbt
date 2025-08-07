@@ -6,6 +6,8 @@ pub(all) struct Block {
   mut preds: Set[Block]
   mut succs: Set[Block]
   mut doms: Set[Block] // These are blocks that dominate this.
+  mut idom: Block?
+  mut domfront: Set[Block] // Dominance frontier.
 }
 
 pub impl Eq for Block with op_equal(self, other) {
@@ -25,15 +27,19 @@ let env: BlockCounter = { cnt: 0 };
 pub fn Block::new(parent: Region, at: Node[Block]) -> Block {
   let id = env.cnt;
   env.cnt += 1;
-  { id, ops: List::new(), parent, at, preds: Set::new(), succs: Set::new(), doms: Set::new() }
+  {
+    id, ops: List::new(), parent, at,
+    preds: Set::new(), succs: Set::new(),
+    doms: Set::new(), idom: None, domfront: Set::new(),
+  }
 }
 
 pub fn Block::dump(self: Block, depth: Int, with_tag~: Bool=true) -> String {
   guard depth >= 1;
   let indent = String::make(depth * 2 - 2, ' ');
   let preds = self.preds.iter().map((x) => x.id);
-  let doms = self.doms.iter().map((x) => x.id);
-  let tag = "\{indent}bb\{self.id}:    // preds = \{preds}, doms = \{doms}\n";
+  let domfront = self.domfront.iter().map((x) => x.id);
+  let tag = "\{indent}bb\{self.id}:    // preds = \{preds}, idom = \{self.idom.map_or(0, (x) => x.id)}, domfront = \{domfront}\n";
   return (if (with_tag) { tag } else { "" }) + self.ops.to_array().map(_.dump(depth)).join("\n")
 }
 
@@ -53,6 +59,9 @@ pub fn Block::split(self: Block, op: Op) -> Block {
   self.split_at(at);
 }
 
+///|
+/// Splits the block into two, such that `op` is at the end of the original block.
+/// 
 pub fn Block::split_after(self: Block, op: Op) -> Block {
   let at = op.at().next();
   self.split_at(at);
@@ -93,14 +102,30 @@ pub fn Block::dominated_by(self: Block, other: Block) -> Bool {
   return other.dominates(self);
 }
 
+///|
+/// Retrieves the last Op in the block.
+/// 
 pub fn Block::back(self: Block) -> Op {
   return self.ops.back();
 }
 
+///|
+/// Gets the next basic block inside the region.
+/// 
 pub fn Block::next(self: Block) -> Block {
   return self.at.next().v();
 }
 
+///|
+/// Returns true if the block is at the very end of the region.
+/// 
 pub fn Block::at_back(self: Block) -> Bool {
   return self.at.next() == self.parent.bbs.end;
+}
+
+///|
+/// Returns the immediate dominator.
+/// 
+pub fn Block::idom(self: Block) -> Block {
+  return self.idom.unwrap();
 }

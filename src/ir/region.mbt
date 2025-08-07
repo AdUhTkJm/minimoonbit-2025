@@ -80,4 +80,66 @@ pub fn Region::update_preds(self: Region) -> Unit {
 
 pub fn Region::update_doms(self: Region) -> Unit {
   self.update_preds();
+  for bb in self.bbs {
+    bb.doms = self.bbs.iter() |> Set::from_iter();
+  }
+  let start = self.front();
+  start.doms = Set::from_array([ start ]);
+  
+  let mut changed = true;
+  while (changed) {
+    changed = false;
+    for bb in self.bbs {
+      if (bb == start) {
+        continue;
+      }
+
+      let mut doms = self.bbs.iter() |> Set::from_iter();
+      for pred in bb.preds {
+        doms = doms.intersection(pred.doms);
+      }
+      doms.add(bb);
+      if (bb.doms != doms) {
+        changed = true;
+      }
+      bb.doms = doms;
+    }
+  }
+
+  for bb in self.bbs {
+    let doms = bb.doms.iter() |> Array::from_iter;
+    for dom in doms {
+      if (dom == bb) {
+        continue;
+      }
+      if @utils.none(doms, (x) => dom != x && x != bb && dom.dominates(x)) {
+        bb.idom = Some(dom);
+        break;
+      }
+    }
+  }
+
+  for bb in self.bbs {
+    bb.domfront = Set::new();
+  }
+  for bb in self.bbs {
+    if bb.preds.size() <= 1 {
+      continue;
+    }
+    for p in bb.preds {
+      let mut runner = p;
+      while runner != bb.idom() {
+        runner.domfront.add(bb);
+        runner = runner.idom();
+      }
+    }
+  }
+}
+
+pub fn Region::front(self: Region) -> Block {
+  return self.bbs.begin.v();
+}
+
+pub fn Region::back(self: Region) -> Block {
+  return self.bbs.end.prev().v();
 }
