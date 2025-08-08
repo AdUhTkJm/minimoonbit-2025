@@ -76,7 +76,7 @@ for k, v in data.items():
           return ({retval});
         }}
       }}
-      die("no attribute '{k}'");
+      die("no attribute '{k}': \\{{self}}");
     }}
 
     pub fn Op::has{camel(k)}(self: Op) -> Bool {{

@@ -190,6 +190,45 @@ pub fn Lower::globals(self: Lower) -> Array[Op] {
   return result;
 }
 
+pub(all) struct Regalloc {
+  mut module: Op
+  mut usedRegisters: Map[Op, Set[Int]]
+  mut funcMap: Map[String, Op]
+}
+
+pub impl Pass for Regalloc with name(_self) {
+  return "regalloc";
+}
+
+pub impl Pass for Regalloc with operate(self) {
+  Regalloc::run(self);
+}
+
+pub fn create_regalloc(module: Op) -> Regalloc {
+  return Regalloc :: { module, usedRegisters: Map::new(), funcMap: Map::new() }
+}
+
+pub fn Regalloc::funcs(self: Regalloc) -> Array[Op] {
+  let bb = self.module.region().block();
+  let result = [];
+  for op in bb {
+    if (isa[FuncOp](op)) {
+      result.push(op);
+    }
+  }
+  return result;
+}
+pub fn Regalloc::globals(self: Regalloc) -> Array[Op] {
+  let bb = self.module.region().block();
+  let result = [];
+  for op in bb {
+    if (isa[GlobalOp](op)) {
+      result.push(op);
+    }
+  }
+  return result;
+}
+
 pub(all) struct ResolveCall {
   mut module: Op
 }

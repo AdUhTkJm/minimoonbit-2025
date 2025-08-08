@@ -36,12 +36,16 @@ pub(all) enum OpKind {
   GotoOp
   ReturnOp
   ProceedOp
+  PlaceholderOp
   LiOp
   LaOp
   AddiOp
   AddwOp
+  AddiwOp
   SubwOp
   MulwOp
+  MulhOp
+  MulhuOp
   DivwOp
   DivuOp
   DivuwOp
@@ -69,12 +73,33 @@ pub(all) enum OpKind {
   XoriOp
   SllOp
   SlliOp
+  SllwOp
+  SlliwOp
   SrlOp
   SrliOp
+  SrlwOp
+  SrliwOp
   SraOp
   SraiOp
+  SrawOp
+  SraiwOp
+  SeqzOp
+  SnezOp
+  SltOp
+  SltiOp
   MvOp
   FmvOp
+  FaddOp
+  FsubOp
+  FmulOp
+  FdivOp
+  FeqOp
+  FltOp
+  FleOp
+  FcvtswOp
+  FcvtwsRtzOp
+  FmvdxOp
+  FmvxdOp
   ReadRegOp
   WriteRegOp
   SubSpOp
@@ -121,12 +146,16 @@ pub impl Show for OpKind with output(self, logger) {
     GotoOp => "goto"
     ReturnOp => "return"
     ProceedOp => "proceed"
+    PlaceholderOp => "placeholder"
     LiOp => "li"
     LaOp => "la"
     AddiOp => "addi"
     AddwOp => "addw"
+    AddiwOp => "addiw"
     SubwOp => "subw"
     MulwOp => "mulw"
+    MulhOp => "mulh"
+    MulhuOp => "mulhu"
     DivwOp => "divw"
     DivuOp => "divu"
     DivuwOp => "divuw"
@@ -154,12 +183,33 @@ pub impl Show for OpKind with output(self, logger) {
     XoriOp => "xori"
     SllOp => "sll"
     SlliOp => "slli"
+    SllwOp => "sllw"
+    SlliwOp => "slliw"
     SrlOp => "srl"
     SrliOp => "srli"
+    SrlwOp => "srlw"
+    SrliwOp => "srliw"
     SraOp => "sra"
     SraiOp => "srai"
+    SrawOp => "sraw"
+    SraiwOp => "sraiw"
+    SeqzOp => "seqz"
+    SnezOp => "snez"
+    SltOp => "slt"
+    SltiOp => "slti"
     MvOp => "mv"
     FmvOp => "fmv"
+    FaddOp => "fadd"
+    FsubOp => "fsub"
+    FmulOp => "fmul"
+    FdivOp => "fdiv"
+    FeqOp => "feq"
+    FltOp => "flt"
+    FleOp => "fle"
+    FcvtswOp => "fcvtsw"
+    FcvtwsRtzOp => "fcvtws_rtz"
+    FmvdxOp => "fmvdx"
+    FmvxdOp => "fmvxd"
     ReadRegOp => "read_reg"
     WriteRegOp => "write_reg"
     SubSpOp => "sub_sp"

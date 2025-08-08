@@ -65,4 +65,7 @@ spilled_rs2:
     - Int
     - Op
   format: <rs2 = spilled \{$1}>
-  
+
+stack_offset:
+  fields: Int
+  format: <offset = \{$0}>

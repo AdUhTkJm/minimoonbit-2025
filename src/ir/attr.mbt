@@ -16,6 +16,7 @@ pub(all) enum Attr {
   SpilledRd(Bool, Int, Op)
   SpilledRs(Bool, Int, Op)
   SpilledRs2(Bool, Int, Op)
+  StackOffset(Int)
 }
 
 pub fn Op::getInt(self: Op) -> Int {
@@ -24,7 +25,7 @@ pub fn Op::getInt(self: Op) -> Int {
       return (_0);
     }
   }
-  die("no attribute 'int'");
+  die("no attribute 'int': \{self}");
 }
 
 pub fn Op::hasInt(self: Op) -> Bool {
@@ -50,7 +51,7 @@ pub fn Op::getDouble(self: Op) -> Double {
       return (_0);
     }
   }
-  die("no attribute 'double'");
+  die("no attribute 'double': \{self}");
 }
 
 pub fn Op::hasDouble(self: Op) -> Bool {
@@ -76,7 +77,7 @@ pub fn Op::getArgCount(self: Op) -> Int {
       return (_0);
     }
   }
-  die("no attribute 'arg_count'");
+  die("no attribute 'arg_count': \{self}");
 }
 
 pub fn Op::hasArgCount(self: Op) -> Bool {
@@ -102,7 +103,7 @@ pub fn Op::getFrom(self: Op) -> Array[Block] {
       return (_0);
     }
   }
-  die("no attribute 'from'");
+  die("no attribute 'from': \{self}");
 }
 
 pub fn Op::hasFrom(self: Op) -> Bool {
@@ -128,7 +129,7 @@ pub fn Op::getName(self: Op) -> String {
       return (_0);
     }
   }
-  die("no attribute 'name'");
+  die("no attribute 'name': \{self}");
 }
 
 pub fn Op::hasName(self: Op) -> Bool {
@@ -171,7 +172,7 @@ pub fn Op::getTarget(self: Op) -> Block {
       return (_0);
     }
   }
-  die("no attribute 'target'");
+  die("no attribute 'target': \{self}");
 }
 
 pub fn Op::hasTarget(self: Op) -> Bool {
@@ -197,7 +198,7 @@ pub fn Op::getElse(self: Op) -> Block {
       return (_0);
     }
   }
-  die("no attribute '_else'");
+  die("no attribute '_else': \{self}");
 }
 
 pub fn Op::hasElse(self: Op) -> Bool {
@@ -223,7 +224,7 @@ pub fn Op::getReg(self: Op) -> Int {
       return (_0);
     }
   }
-  die("no attribute 'reg'");
+  die("no attribute 'reg': \{self}");
 }
 
 pub fn Op::hasReg(self: Op) -> Bool {
@@ -249,7 +250,7 @@ pub fn Op::getRd(self: Op) -> Int {
       return (_0);
     }
   }
-  die("no attribute 'rd'");
+  die("no attribute 'rd': \{self}");
 }
 
 pub fn Op::hasRd(self: Op) -> Bool {
@@ -275,7 +276,7 @@ pub fn Op::getRs(self: Op) -> Int {
       return (_0);
     }
   }
-  die("no attribute 'rs'");
+  die("no attribute 'rs': \{self}");
 }
 
 pub fn Op::hasRs(self: Op) -> Bool {
@@ -301,7 +302,7 @@ pub fn Op::getRs2(self: Op) -> Int {
       return (_0);
     }
   }
-  die("no attribute 'rs2'");
+  die("no attribute 'rs2': \{self}");
 }
 
 pub fn Op::hasRs2(self: Op) -> Bool {
@@ -327,7 +328,7 @@ pub fn Op::getSpilledRd(self: Op) -> (Bool, Int, Op) {
       return (_0, _1, _2);
     }
   }
-  die("no attribute 'spilled_rd'");
+  die("no attribute 'spilled_rd': \{self}");
 }
 
 pub fn Op::hasSpilledRd(self: Op) -> Bool {
@@ -353,7 +354,7 @@ pub fn Op::getSpilledRs(self: Op) -> (Bool, Int, Op) {
       return (_0, _1, _2);
     }
   }
-  die("no attribute 'spilled_rs'");
+  die("no attribute 'spilled_rs': \{self}");
 }
 
 pub fn Op::hasSpilledRs(self: Op) -> Bool {
@@ -379,7 +380,7 @@ pub fn Op::getSpilledRs2(self: Op) -> (Bool, Int, Op) {
       return (_0, _1, _2);
     }
   }
-  die("no attribute 'spilled_rs2'");
+  die("no attribute 'spilled_rs2': \{self}");
 }
 
 pub fn Op::hasSpilledRs2(self: Op) -> Bool {
@@ -394,6 +395,32 @@ pub fn Op::hasSpilledRs2(self: Op) -> Bool {
 pub fn Op::removeSpilledRs2(self: Op) -> Unit {
   for i, x in self.attrs {
     if (x is SpilledRs2(_)) {
+      self.attrs = self.attrs[:i].to_array() + self.attrs[i+1:].to_array();
+    }
+  }
+}
+
+pub fn Op::getStackOffset(self: Op) -> Int {
+  for x in self.attrs {
+    if (x is StackOffset(_0)) {
+      return (_0);
+    }
+  }
+  die("no attribute 'stack_offset': \{self}");
+}
+
+pub fn Op::hasStackOffset(self: Op) -> Bool {
+  for x in self.attrs {
+    if (x is StackOffset(_)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+pub fn Op::removeStackOffset(self: Op) -> Unit {
+  for i, x in self.attrs {
+    if (x is StackOffset(_)) {
       self.attrs = self.attrs[:i].to_array() + self.attrs[i+1:].to_array();
     }
   }
@@ -415,6 +442,7 @@ pub impl Show for Attr with output(self, logger) {
     SpilledRd(_0, _1, _2) => "<rd = spilled \{_1}>"
     SpilledRs(_0, _1, _2) => "<rs = spilled \{_1}>"
     SpilledRs2(_0, _1, _2) => "<rs2 = spilled \{_1}>"
+    StackOffset(_0) => "<offset = \{_0}>"
   }
   logger.write_string(str);
 }

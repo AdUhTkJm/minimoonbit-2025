@@ -25,7 +25,7 @@ priv struct OpEnv {
   mut cnt: Int
 }
 
-let openv: OpEnv = { cnt: 0 };
+let openv: OpEnv = { cnt: 1 };
 
 pub fn Op::build(kind: OpKind, ty: Type, operands: Array[Op], attrs~: Array[Attr] = [], parent: Block?, at: Node[Op]?) -> Op {
   let cnt = openv.cnt;
@@ -245,4 +245,30 @@ pub fn Op::getOperands(self: Op) -> Array[Op] {
 
 pub fn Op::getOperandCount(self: Op) -> Int {
   return self.operands.length();
+}
+
+pub fn Op::atFront(self: Op) -> Bool {
+  return self.at() == self.parent().ops.begin;
+}
+
+pub fn Op::atBack(self: Op) -> Bool {
+  return self.at().next() == self.parent().ops.end;
+}
+
+pub fn Op::prevOp(self: Op) -> Op {
+  if (self.atFront()) {
+    return Op::default();
+  }
+  return self.at().prev().v();
+}
+
+pub fn Op::nextOp(self: Op) -> Op {
+  if (self.atBack()) {
+    return Op::default();
+  }
+  return self.at().next().v();
+}
+
+pub fn Op::valid(self: Op) -> Bool {
+  return self.id != 0;
 }

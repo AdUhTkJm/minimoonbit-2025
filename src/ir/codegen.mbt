@@ -239,7 +239,7 @@ pub fn CodeGen::build(self: CodeGen, x: AST) -> Op {
   let region = module.appendRegion();
   self.builder.setToBlockStart(region.appendBlock());
   // Create an __init() function.
-  self.init = self.builder.create(FuncOp, unit, [], attrs=[Name("__init")]);
+  self.init = self.builder.create(FuncOp, unit, [], attrs=[Name("__init"), ArgCount(0)]);
   let region = self.init.appendRegion();
   region.appendBlock() |> ignore;
   guard x is Block(arr);

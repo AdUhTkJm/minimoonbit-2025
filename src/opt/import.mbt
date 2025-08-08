@@ -1,5 +1,5 @@
 typealias @utils.(Config, Map)
-typealias @ir.(Op, Builder, Block, Region)
+typealias @ir.(Op, Builder, Block, Region, Type, OpKind)
 
 fnalias @utils.(die)
 

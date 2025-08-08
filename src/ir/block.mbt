@@ -8,6 +8,8 @@ pub(all) struct Block {
   mut doms: Set[Block] // These are blocks that dominate this.
   mut idom: Block?
   mut domfront: Set[Block] // Dominance frontier.
+  mut liveout: Set[Op]
+  mut livein: Set[Op]
 }
 
 pub impl Eq for Block with op_equal(self, other) {
@@ -31,6 +33,7 @@ pub fn Block::new(parent: Region, at: Node[Block]) -> Block {
     id, ops: List::new(), parent, at,
     preds: Set::new(), succs: Set::new(),
     doms: Set::new(), idom: None, domfront: Set::new(),
+    liveout: Set::new(), livein: Set::new()
   }
 }
 

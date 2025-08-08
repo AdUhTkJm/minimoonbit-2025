@@ -67,6 +67,10 @@ pub fn Builder::setToBlockStart(self: Builder, block: Block) -> Unit {
   self.bb = block |> Some;
 }
 
+pub fn Builder::setToRegionStart(self: Builder, region: Region) -> Unit {
+  self.setToBlockStart(region.block());
+}
+
 pub fn Builder::setAfterOp(self: Builder, op: Op) -> Unit {
   self.at = op.at().next;
   self.bb = op.parent;
@@ -75,6 +79,10 @@ pub fn Builder::setAfterOp(self: Builder, op: Op) -> Unit {
 pub fn Builder::setToBlockEnd(self: Builder, block: Block) -> Unit {
   self.at = block.ops.end |> Some;
   self.bb = block |> Some;
+}
+
+pub fn Builder::setToRegionEnd(self: Builder, region: Region) -> Unit {
+  self.setToBlockEnd(region.block());
 }
 
 pub fn Builder::getInsertionPoint(self: Builder) -> (Node[Op], Block) {

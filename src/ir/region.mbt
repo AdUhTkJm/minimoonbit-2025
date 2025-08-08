@@ -175,3 +175,88 @@ pub fn Region::erase(self: Region) -> Unit {
   }
   self.parent.removeRegion(self);
 }
+
+pub fn Region::getParent(self: Region) -> Op {
+  return self.parent;
+}
+pub fn Region::updateLiveness(self: Region) -> Unit {
+  self.updatePreds();
+
+  let phis: Map[Block, Set[Op]] = Map::new();
+  let upwardExposed: Map[Block, Set[Op]] = Map::new();
+  let defined: Map[Block, Set[Op]] = Map::new();
+
+  // Clear existing values.
+  for bb in self.bbs {
+    bb.livein.clear();
+    bb.liveout.clear();
+  }
+
+  for bb in self.bbs {
+    for op in bb.ops {
+      if (isa[PhiOp](op)) {
+        phis[bb].add(op);
+        continue;
+      }
+
+      defined[bb].add(op);
+
+      // A value is upward exposed if it's from some block upwards;
+      // i.e. it's used but not defined in this block.
+      for value in op.getOperands() {
+        if (!defined[bb].contains(value)) {
+          upwardExposed[bb].add(value);
+        }
+      }
+    }
+  }
+
+  let worklist: Array[Block] = [];
+  
+  // Do a dataflow approach. We start with all exit blocks;
+  // i.e. those that have no successors.
+  for bb in self.bbs {
+    if (bb.succs.size() == 0) {
+      worklist.push(bb);
+    }
+  }
+
+  let mut changed = true;
+  while (changed) {
+    changed = false;
+    for bb in self.bbs {
+      let liveinOld = bb.livein;
+
+      // LiveOut(B) = \bigcup_{S\in succ(B)} (LiveIn(S) - PhiDefs(S)) \cup PhiUses(B)
+      // Here PhiUses(B) means the set of variables used in Phi nodes of S that come from B.
+      let liveout: Set[Op] = Set::new();
+      for succ in bb.succs {
+        let liveout = succ.livein.difference(phis[succ]);
+        for phi in phis[succ] {
+          let ops = phi.getOperands();
+          let bbs = phi.getFrom();
+          for i in 0..<ops.length() {
+            if (bbs[i] == bb) {
+              liveout.add(ops[i]);
+            }
+          }
+        }
+      }
+
+      bb.liveout = liveout;
+
+      // LiveIn(B) = PhiDefs(B) \cup UpwardExposed(B) \cup (LiveOut(B) - Defs(B))
+      bb.livein = liveout.difference(defined[bb]);
+      for x in upwardExposed[bb] {
+        bb.livein.add(x);
+      }
+      for x in phis[bb] {
+        bb.livein.add(x);
+      }
+
+      if (liveinOld != bb.livein) {
+        changed = true;
+      }
+    }
+  }
+}

@@ -117,4 +117,36 @@ pub fn Lower::runImpl(func: Op) -> Unit {
       builder.replace(op, ReadRegOp, i32, [], attrs=[Reg(a0)]);
     }
   }
+
+  let region = func.region();
+  let block = region.block();
+
+  // All alloca's are in the first block.
+  let mut offset = 0; // Offset from sp.
+  let mut total = 0; // Total stack frame size
+  let allocas: Array[Op] = [];
+  for op in block {
+    if (!isa[AllocaOp](op)) {
+      continue;
+    }
+
+    let size = if (op.ty == f64 || op.ty == i64) { 8 } else { 4 };
+    total += size;
+    allocas.push(op);
+  }
+
+  for op in allocas {
+    // Translate itself into `sp + offset`.
+    builder.setBeforeOp(op);
+    let spValue = builder.create(ReadRegOp, i32, [], attrs=[Reg(sp)]);
+    let offsetValue = builder.create(LiOp, i32, [], attrs=[Int(offset)]);
+    let add = builder.create(AddOp, i32, [spValue, offsetValue]);
+    op.replaceAllUsesWith(add);
+
+    let size = if (op.ty == f64 || op.ty == i64) { 8 } else { 4 };
+    offset += size;
+    op.erase();
+  }
+
+  func.add(StackOffset(offset));
 }

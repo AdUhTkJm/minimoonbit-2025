@@ -8,6 +8,10 @@ pub(all) enum Type {
   Function(Type, Array[Type])
 } derive(Show, Hash, Eq)
 
+pub impl Default for Type with default() {
+  return Int;
+}
+
 priv struct WeakCounter {
   mut cnt: Int
 }
