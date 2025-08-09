@@ -381,13 +381,13 @@ pub fn Regalloc::runImpl(self: Regalloc, region: Region, isLeaf: Bool) -> Unit {
   }
 
   let ops: Array[Op] = [];
-  for k, v in interf {
+  for k, _ in interf {
     ops.push(k);
   }
 
   // Even though registers in `priority` might not be colliding,
   // we still allocate them here to respect their preference.
-  for k, v in priority {
+  for k, _ in priority {
     ops.push(k);
   }
 
@@ -1442,7 +1442,7 @@ pub fn Regalloc::tidyup(self: Regalloc, region: Region) -> Unit {
 fn save(builder: Builder, regs: Array[Int], offset: Int) -> Unit {
   fn create_store(addr: Int, reg: Int, offset: Int) {
     let kind: OpKind = if (isFP(reg)) { FsdOp } else { SdOp }
-    builder.creates(FsdOp, unit, [], attrs=[Rs(reg), Rs2(addr), Int(offset)]);
+    builder.creates(kind, unit, [], attrs=[Rs(reg), Rs2(addr), Int(offset)]);
   }
 
   let mut offset = offset;
@@ -1461,7 +1461,7 @@ fn save(builder: Builder, regs: Array[Int], offset: Int) -> Unit {
 fn load(builder: Builder, regs: Array[Int], offset: Int) -> Unit {
   fn create_load(addr: Int, reg: Int, offset: Int) {
     let kind: OpKind = if (isFP(reg)) { FldOp } else { LdOp }
-    builder.creates(FldOp, unit, [], attrs=[Rd(reg), Rs(addr), Int(offset)]);
+    builder.creates(kind, unit, [], attrs=[Rd(reg), Rs(addr), Int(offset)]);
   }
 
   let mut offset = offset;

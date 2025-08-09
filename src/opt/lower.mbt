@@ -148,8 +148,12 @@ pub fn Lower::runImpl(func: Op) -> Unit {
       builder.creates(SdOp, unit, [spill, sp], attrs=[Int(i * 8)]);
     }
 
+    let mut name = op.getName();
+    if (["print_int", "print_double"].contains(name)) {
+      name = "minimbt_\{name}"
+    }
     builder.creates(CallOp, unit, argsNew, attrs=[
-      Name(op.getName()),
+      Name(name),
       ArgCount(args.length())
     ]);
 

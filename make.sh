@@ -18,6 +18,11 @@ while [[ $# -gt 0 ]]; do
       echo "usage: make.sh -p <print after>"
     fi
     after=$2; shift 2;;
+  -i|--input)
+    if [[ $# -eq 1 ]]; then
+      echo "usage: make.sh -i <input file>"
+    fi
+    input=$2; shift 2;;
   --ast)
     dump_ast="--ast"; shift 1;;
   --clean)
@@ -45,7 +50,7 @@ timestamp=$(date +%s)
 cache=build/timestamp
 if [[ -f $cache ]]; then
   last=$(cat $cache)
-  modified=$(find src/info -type f -newermt "@$last" | head -n 1)
+  modified=$(find src/info scripts -type f -newermt "@$last" | head -n 1)
   if [[ -z $modified ]]; then
     no_rebuild=1
   fi
@@ -64,10 +69,13 @@ if [[ -z $no_rebuild ]]; then
   cat src/info/passes.yaml | python3 scripts/pass-pipeline-gen.py > src/bin/pipeline.mbt
 fi
 
+gcc=riscv64-linux-gnu-gcc
+qemu=qemu-riscv64-static
+out=out.txt
+err=err.txt
+
 if [[ -n $testcase ]]; then
   testcase=$(find test -regextype posix-egrep -regex ".*/$testcase(\.mbt)?")
-  out=out.txt
-  err=err.txt
   before_args=()
   if [[ -n $before ]]; then
     before_args=(-q "$before")
@@ -104,15 +112,27 @@ if [[ -n $testcase ]]; then
     ' $testcase
   fi
 
+  cat $out
   if [[ $retval -ne 0 ]]; then
     echo "panicked."
     cat $err
+  else
+    $gcc -static temp/$base.s test/mbtlib.c -o temp/$base
+    if [[ -n $input ]]; then
+      $qemu temp/$base < $input
+      retval=$?
+    else
+      $qemu temp/$base
+      retval=$?
+    fi
+    if [[ $retval -ne 0 ]]; then
+      echo "aborted: $retval"
+    fi
   fi
-  cat $out
+fi
 
-  if [[ -n $clean ]]; then
-    rm $out $err
-    rm -rf temp
-    mkdir temp
-  fi
+if [[ -n $clean ]]; then
+  rm $out $err
+  rm -rf temp
+  mkdir temp
 fi
