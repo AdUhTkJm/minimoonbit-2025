@@ -54,6 +54,7 @@ pub fn Lower::runImpl(func: Op) -> Unit {
   let all = func.findAll(ReturnOp);
   for x in all {
     if (x.getOperandCount() == 0) {
+      builder.replace(x, RetOp, x.ty, x.getOperands(), attrs=x.attrs);
       continue;
     }
 

@@ -15,7 +15,7 @@ print("} derive(Eq, Hash)")
 
 print("""
 pub impl Default for OpKind with default() {
-  return ModuleOp;
+  return BadOp;
 }
 """)
 

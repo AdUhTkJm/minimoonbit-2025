@@ -48,6 +48,14 @@ pub impl[T: Show] Show for List[T] with output(self, writer) {
   writer.write_string(self.to_string())
 }
 
+pub impl[T] Default for List[T] with default() {
+  return List::new();
+}
+
+pub impl[T] Default for Node[T] with default() {
+  return { w: () => { panic() }, next: None, prev: None };
+}
+
 ///|
 /// I still can't understand how this works.
 /// Looks still buggy.

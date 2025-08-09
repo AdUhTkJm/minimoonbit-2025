@@ -111,7 +111,7 @@ pub fn Flatten::runImpl(func: Op) -> Unit {
   for x in region {
     if x.ops.length() == 0 || !x.getLastOp().isAny([GotoOp, BrOp, ReturnOp]) {
       builder.setToBlockEnd(x);
-      if x.at_back() {
+      if x.atBack() {
         builder.creates(ReturnOp, unit, []);
         break;
       }

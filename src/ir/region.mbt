@@ -1,7 +1,7 @@
 pub(all) struct Region {
   bbs: List[Block]
   mut parent: Op
-}
+} derive(Default)
 
 pub impl Show for Region with output(self, logger) {
   logger.write_string(self.dump(1))
@@ -179,6 +179,15 @@ pub fn Region::erase(self: Region) -> Unit {
 pub fn Region::getParent(self: Region) -> Op {
   return self.parent;
 }
+
+pub fn Region::getLastBlock(self: Region) -> Block {
+  return self.bbs.end.prev().v();
+}
+
+pub fn Region::getFirstBlock(self: Region) -> Block {
+  return self.bbs.begin.v();
+}
+
 pub fn Region::updateLiveness(self: Region) -> Unit {
   self.updatePreds();
 

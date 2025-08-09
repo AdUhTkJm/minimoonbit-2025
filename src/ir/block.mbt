@@ -10,7 +10,7 @@ pub(all) struct Block {
   mut domfront: Set[Block] // Dominance frontier.
   mut liveout: Set[Op]
   mut livein: Set[Op]
-}
+} derive(Default)
 
 pub impl Eq for Block with op_equal(self, other) {
   return physical_equal(self, other);
@@ -122,7 +122,7 @@ pub fn Block::next(self: Block) -> Block {
 ///|
 /// Returns true if the block is at the very end of the region.
 /// 
-pub fn Block::at_back(self: Block) -> Bool {
+pub fn Block::atBack(self: Block) -> Bool {
   return self.at.next() == self.parent.bbs.end;
 }
 
@@ -153,4 +153,16 @@ pub fn Block::erase(self: Block) -> Unit {
     op.erase();
   }
   self.parent.bbs.erase(self.at);
+}
+
+pub fn Block::nextBlock(self: Block) -> Block {
+  return self.at.next().v();
+}
+
+pub fn Block::prevBlok(self: Block) -> Block {
+  return self.at.prev().v();
+}
+
+pub fn Block::getOpCount(self: Block) -> Int {
+  return self.ops.length();
 }

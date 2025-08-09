@@ -137,9 +137,37 @@ fn hasRd(x: Op) -> Bool {
 }
 
 pub fn Regalloc::run(self: Regalloc) -> Unit {
-  for x in self.funcs() {
-    let isLeaf = x.findAll(CallOp).is_empty();
-    self.runImpl(x.region(), isLeaf);
+  let funcs = self.funcs();
+  let leaves: Set[Op] = Set::new();
+
+  for func in funcs {
+    let isLeaf = func.findAll(CallOp).is_empty();
+    if (isLeaf) {
+      leaves.add(func);
+    }
+    self.runImpl(func.region(), isLeaf);
+  }
+
+  for func in funcs {
+    let set = self.usedRegisters[func];
+    for bb in func.region() {
+      for op in bb {
+        if (op.hasRd()) {
+          set.add(op.getRd());
+        }
+        if (op.hasRs()) {
+          set.add(op.getRs());
+        }
+        if (op.hasRs2()) {
+          set.add(op.getRs2());
+        }
+      }
+    }
+  }
+
+  for func in funcs {
+    self.proEpilogue(func, leaves.contains(func));
+    self.tidyup(func.region());
   }
 }
 
@@ -584,9 +612,9 @@ pub fn Regalloc::runImpl(self: Regalloc, region: Region, isLeaf: Bool) -> Unit {
       }
       let v1 = op.def(0);
       if (!spillOffset.contains(v1)) {
-        op.add(Rs(getReg(v1)));
+        op.add(Rs2(getReg(v1)));
       } else {
-        op.add(SpilledRs(fpreg(v1.ty), spillOffset[v1], v1));
+        op.add(SpilledRs2(fpreg(v1.ty), spillOffset[v1], v1));
       }
       op.removeAllOperands();
     }
@@ -892,7 +920,7 @@ pub fn Regalloc::runImpl(self: Regalloc, region: Region, isLeaf: Bool) -> Unit {
     // Do a topological sort; it will decide whether there's a cycle.
     fn dfs(node: Int) {
       visiting.add(node);
-      let src: Int = moveGraph[node];
+      let src = moveGraph[node];
 
       if (visiting.contains(src)) {
         // A node is visited twice. Here's a cycle.
@@ -906,7 +934,8 @@ pub fn Regalloc::runImpl(self: Regalloc, region: Region, isLeaf: Bool) -> Unit {
       sorted.push((node, src));
     };
 
-    for dst, src in mvs {
+    for elem in mvs {
+      let (dst, src) = elem;
       if (!visited.contains(dst)) {
         dfs(dst);
       }
@@ -1103,4 +1132,436 @@ pub fn Regalloc::runImpl(self: Regalloc, region: Region, isLeaf: Bool) -> Unit {
   for op in remove {
     op.erase();
   }
+}
+
+pub fn Regalloc::latePeephole(funcOp: Op) -> Bool {
+  let builder = Builder::new();
+  let mut converted = false;
+
+  fn create_mv(fp: Bool, rd: Int, rs: Int) -> Op {
+    if (!fp) {
+      builder.create(MvOp, unit, [], attrs=[ Rd(rd), Rs(rs) ]);
+    } else {
+      builder.create(FmvOp, unit, [], attrs=[ Rd(rd), Rs(rs) ]);
+    }
+  }
+
+  fn creates_mv(fp: Bool, rd: Int, rs: Int) -> Unit {
+    create_mv(fp, rd, rs) |> ignore;
+  }
+
+  let changes: Array[(OpKind, OpKind)] = [(SwOp, LwOp), (SdOp, LdOp), (FsdOp, FldOp)];
+  for elem in changes {
+    let (store, load) = elem;
+    let all = funcOp.findAll(store);
+    for op in all {
+      if (op.atBack()) {
+        continue;
+      }
+
+      //   sw a0, N(addr)
+      //   lw a1, N(addr)
+      // becomes
+      //   sw a0, N(addr)
+      //   mv a1, a0
+      let next = op.nextOp();
+      if (isa[load](next) &&
+          next.getRs() == op.getRs2() &&
+          next.getInt() == op.getInt()) {
+        converted = true;
+        builder.setBeforeOp(next);
+        creates_mv(isFP(next.getRd()), next.getRd(), op.getRs());
+        next.erase();
+      }
+    };
+  }
+
+  let all = funcOp.findAll(FmvdxOp);
+  for op in all {
+    if (op.atBack()) {
+      continue;
+    }
+
+    let next = op.nextOp();
+    if (isa[FmvxdOp](next) && next.getRs() == op.getRd()) {
+      converted = true;
+      builder.setBeforeOp(next);
+      creates_mv(isFP(next.getRd()), next.getRd(), op.getRs());
+      next.erase();
+    }
+  };
+
+  let mut changed = true;
+  let mut stores: Array[Op] = [];
+  while (changed) {
+    changed = false;
+    stores = funcOp.findAll(SwOp);
+    for op in stores {
+      if (op.atBack()) {
+        continue;
+      }
+      let next = op.nextOp();
+
+      //   sw zero, N(sp)
+      //   sw zero, N+4(sp)
+      // becomes
+      //   sd zero, N(sp)
+      // only when N is a multiple of 8.
+      //
+      // We know `sp` is 16-aligned, but we don't know for other registers.
+      // That's why we fold it only for `sp`.
+      if (isa[SwOp](next) &&
+          op.getRs() == zero && op.getRs2() == sp &&
+          next.getRs() == zero && next.getRs2() == sp &&
+          op.getInt() % 8 == 0 && next.getInt() == op.getInt() + 4) {
+        converted = true;
+        changed = true;
+
+        let offset = op.getInt();
+        builder.replace(op, SdOp, unit, [], attrs=[Rs(zero), Rs2(sp), Int(offset)]);
+        next.erase();
+        break;
+      }
+
+      // Similarly:
+      //   sw zero, N(sp)
+      //   sw zero, N-4(sp)
+      // becomes
+      //   sd zero, N-4(sp)
+      // only when N-4 is a multiple of 8.
+      if (isa[SwOp](next) &&
+          op.getRs() == zero && op.getRs2() == sp &&
+          next.getRs() == zero && next.getRs2() == sp &&
+          op.getInt() % 8 == 0 && next.getInt() == op.getInt() - 4) {
+        converted = true;
+        changed = true;
+
+        let offset = op.getInt();
+        builder.replace(op, SdOp, unit, [], attrs=[Rs(zero), Rs2(sp), Int(offset - 4)]);
+        next.erase();
+        break;
+      }
+    }
+  }
+
+  // Eliminate useless MvOp.
+  let all = funcOp.findAll(MvOp);
+  for op in all {
+    if (op.getRd() == op.getRs()) {
+      converted = true;
+      op.erase();
+      continue;
+    }
+
+    // mv  a0, a1    <-- op
+    // mv  a1, a0    <-- mv2
+    // We can delete the second operation, `mv2`.
+    if (!op.atBack()) {
+      let mv2 = op.nextOp();
+      if (isa[MvOp](mv2) && op.getRd() == mv2.getRs() && op.getRs() == mv2.getRd()) {
+        // We can't erase `mv2` because it might be explored afterwards.
+        // We need to change the content of mv2 and erase this one.
+        mv2.removeRd();
+        mv2.removeRs();
+        mv2.add(Rd(op.getRd()));
+        mv2.add(Rs(op.getRs()));
+        op.erase();
+      }
+    }
+  };
+
+  let all = funcOp.findAll(FmvOp);
+  for op in all {
+    if (op.getRd() == op.getRs()) {
+      converted = true;
+      op.erase();
+    }
+  };
+
+  return converted;
+}
+
+pub fn Regalloc::tidyup(self: Regalloc, region: Region) -> Unit {
+  let builder = Builder::new();
+  let funcOp = region.parent;
+  region.updatePreds();
+
+  // Say the before is `blt`, then we might see
+  //   blt %1 %2 <target = bb1> <else = bb2>
+  // which means `if (%1 < %2) goto bb1 else goto bb2`.
+  //
+  // If the next block is just <bb1>, then we flip it to bge, and make the target <bb2>.
+  // if the next block is <bb2>, then we make the target <bb2>.
+  // otherwise, make the target <bb1>, and add another `j <bb2>`.
+  fn replaceBranchImpl(before: OpKind, after: OpKind) -> Unit {
+    let all = funcOp.findAll(before);
+    for op in all {
+      if (!op.hasElse()) {
+        continue;
+      }
+      let target = op.getTarget();
+      let ifnot = op.getElse();
+      let me = op.parent();
+      if (me == me.parent.getLastBlock()) {
+        builder.setAfterOp(op);
+        builder.creates(JOp, unit, [], attrs=[Target(ifnot)]);
+        op.removeElse();
+        continue;
+      }
+      if (me.nextBlock() == target) {
+        builder.replace(op, after, unit, [], attrs=[Rs(op.getRs()), Rs2(op.getRs2()), Target(ifnot)]);
+        continue;
+      }
+      if (me.nextBlock() == ifnot) {
+        continue;
+      }
+      builder.setAfterOp(op);
+      builder.creates(JOp, unit, [], attrs=[Target(ifnot)]);
+      op.removeElse();
+    }
+  }
+
+  fn replaceBranch(t1: OpKind, t2: OpKind) -> Unit {
+    replaceBranchImpl(t1, t2);
+    replaceBranchImpl(t2, t1);
+  }
+
+  // Replace blocks with only a single `j` as terminator.
+  let jumpTo: Map[Block, Block] = Map::new();
+  for bb in region {
+    if (bb.getOpCount() == 1 && isa[JOp](bb.getLastOp())) {
+      let target = bb.getLastOp().getTarget();
+      jumpTo[bb] = target;
+    }
+  }
+
+  // Calculate jump-to closure.
+  let mut changed = true;
+  while (changed) {
+    changed = false;
+    for k, v in jumpTo {
+      if (jumpTo.contains(v)) {
+        jumpTo[k] = jumpTo[v];
+        changed = true;
+      }
+    }
+  }
+
+  for bb in region { 
+    let term = bb.getLastOp();
+    if (term.hasTarget()) {
+      let target = term.getTarget();
+      if (jumpTo.contains(target)) {
+        term.removeTarget();
+        term.add(Target(jumpTo[target]));
+      }
+    }
+
+    if (term.hasElse()) {
+      let target = term.getElse();
+      if (jumpTo.contains(target)) {
+        term.removeElse();
+        term.add(Else(jumpTo[target]));
+      }
+    }
+  }
+
+  // Erase all those single-j's.
+  region.updatePreds();
+
+  for bb, _ in jumpTo {
+    bb.erase();
+  }
+  
+  // After lowering, combine sequential blocks into one.
+  // Simpler than simplify-cfg, because no phis could remain now.
+  changed = true;
+  while (changed) {
+    changed = false;
+    for bb in region {
+      if (bb.succs.size() != 1) {
+        continue;
+      }
+
+      let succ = bb.succs.to_array()[0];
+      if (succ.preds.size() != 1) {
+        continue;
+      }
+
+      // Remove the jump to `succ`.
+      let term = bb.getLastOp();
+      if (isa[JOp](term)) {
+        term.erase();
+      }
+      
+      // All successors of `succ` now have pred `bb`.
+      // `bb` also regard them as successors.
+      for s in succ.succs {
+        s.preds.remove(succ);
+        s.preds.add(bb);
+        bb.succs.add(s);
+      }
+      // Remove `succ` from the successors of `bb`.
+      bb.succs.remove(succ);
+
+      // Then move all instruction in `succ` to `bb`.
+      let ops = succ.ops.to_array();
+      for op in ops {
+        op.moveToEnd(bb);
+      }
+
+      succ.erase();
+      changed = true;
+      break;
+    }
+  }
+
+  // Now branches are still having both TargetAttr and ElseAttr.
+  // Replace them (perform split when necessary), so that they only have one target.
+  replaceBranch(BltOp, BgeOp);
+  replaceBranch(BeqOp, BneOp);
+  replaceBranch(BleOp, BgtOp);
+
+  while (Regalloc::latePeephole(funcOp)) { }
+
+  // Also, eliminate useless JOp.
+  let all = funcOp.findAll(JOp);
+  for op in all {
+    let target = op.getTarget();
+    let me = op.parent();
+    if (me.atBack()) {
+      continue;
+    }
+
+    if (me.nextBlock() == target) {
+      op.erase();
+    }
+  };
+}
+
+fn save(builder: Builder, regs: Array[Int], offset: Int) -> Unit {
+  fn create_store(addr: Int, reg: Int, offset: Int) {
+    let kind: OpKind = if (isFP(reg)) { FsdOp } else { SdOp }
+    builder.creates(FsdOp, unit, [], attrs=[Rs(reg), Rs2(addr), Int(offset)]);
+  }
+
+  let mut offset = offset;
+  for reg in regs {
+    offset -= 8;
+    if (offset < 2048) {
+      create_store(sp, reg, offset)
+    } else {
+      builder.creates(LiOp, unit, [], attrs=[Rd(spillReg2), Int(offset)]);
+      builder.creates(AddOp, unit, [], attrs=[Rd(spillReg2), Rs(spillReg2), Rs2(sp)]);
+      create_store(spillReg2, reg, 0);
+    }
+  }
+}
+
+fn load(builder: Builder, regs: Array[Int], offset: Int) -> Unit {
+  fn create_load(addr: Int, reg: Int, offset: Int) {
+    let kind: OpKind = if (isFP(reg)) { FldOp } else { LdOp }
+    builder.creates(FldOp, unit, [], attrs=[Rd(reg), Rs(addr), Int(offset)]);
+  }
+
+  let mut offset = offset;
+  for reg in regs {
+    offset -= 8;
+    if (offset < 2048) {
+      create_load(sp, reg, offset)
+    } else {
+      builder.creates(LiOp, unit, [], attrs=[Rd(spillReg), Int(offset)]);
+      builder.creates(AddOp, unit, [], attrs=[Rd(spillReg), Rs(spillReg), Rs2(sp)]);
+      create_load(spillReg2, reg, 0);
+    }
+  }
+}
+
+pub fn Regalloc::proEpilogue(self: Regalloc, funcOp: Op, isLeaf: Bool) -> Unit {
+  let builder = Builder::new();
+  let usedRegs = self.usedRegisters[funcOp];
+  let region = funcOp.region();
+
+  // Preserve return address if this calls another function.
+  let preserve: Array[Int] = [];
+  for x in usedRegs {
+    if (calleeSaved.contains(x)) {
+      preserve.push(x);
+    }
+  }
+  if (!isLeaf) {
+    preserve.push(ra);
+  }
+
+  // If there's a SubSpOp, then it must be at the top of the first block.
+  let mut offset = funcOp.getStackOffset();
+  offset += 8 * preserve.length();
+
+  // Round op to the nearest multiple of 16.
+  // This won't be entered in the special case where offset == 0.
+  if (offset % 16 != 0) {
+    offset = offset / 16 * 16 + 16;
+  }
+
+  // Add function prologue, preserving the regs.
+  let entry = region.block();
+  builder.setToBlockStart(entry);
+  if (offset != 0) {
+    builder.creates(SubSpOp, unit, [], attrs=[Int(offset)]);
+  }
+
+  save(builder, preserve, offset);
+
+  // Similarly add function epilogue.
+  if (offset != 0) {
+    let rets = funcOp.findAll(RetOp);
+    let bb = region.appendBlock();
+    for ret in rets {
+      builder.replace(ret, JOp, unit, [], attrs=[Target(bb)]);
+    }
+
+    builder.setToBlockStart(bb);
+
+    load(builder, preserve, offset);
+    builder.creates(SubSpOp, unit, [], attrs=[Int(-offset)]);
+    builder.creates(RetOp, unit, []);
+  }
+
+  // Caller preserved registers are marked correctly as interfered,
+  // because of the placeholders.
+
+  // Deal with remaining GetArg.
+  // The arguments passed by registers have already been eliminated.
+  // Now all remaining ones are passed on stack; sort them according to index.
+  let remainingGets = funcOp.findAll(GetArgOp);
+  remainingGets.sort_by((a, b) => Compare::compare(a.getInt(), b.getInt()));
+  let argOffsets: Map[Op, Int] = Map::new();
+  let mut argOffset = 0;
+
+  for op in remainingGets {
+    argOffsets[op] = argOffset;
+    argOffset += 8;
+  }
+
+  let all = funcOp.findAll(GetArgOp);
+  for op in all {
+    let myoffset = offset + argOffsets[op];
+    builder.setBeforeOp(op);
+    builder.replace(op, if (isFP(op.getRd())) { FsdOp } else { SdOp }, unit, [], attrs=[Rd(op.getRd()), Rs(sp), Int(myoffset)]);
+  };
+
+  //   subsp <4>
+  // becomes
+  //   addi <rd = sp> <rs = sp> <-4>
+  let all = funcOp.findAll(SubSpOp);
+  for op in all {
+    let offset = op.getInt();
+    if (offset <= 2048 && offset > -2048) {
+      builder.replace(op, AddiOp, unit, [], attrs=[Rd(sp), Rs(sp), Int(-offset)]);
+    } else {
+      builder.setBeforeOp(op);
+      builder.creates(LiOp, unit, [], attrs=[Rd(t0), Int(offset)]);
+      builder.replace(op, SubOp, unit, [], attrs=[Rd(sp), Rs(sp), Rs2(t0)]);
+    }
+  };
 }
