@@ -38,6 +38,44 @@ pub fn Dce::globals(self: Dce) -> Array[Op] {
   return result;
 }
 
+pub(all) struct Dump {
+  mut module: Op
+  mut builder: StringBuilder
+}
+
+pub impl Pass for Dump with name(_self) {
+  return "dump";
+}
+
+pub impl Pass for Dump with operate(self) {
+  Dump::run(self);
+}
+
+pub fn create_dump(module: Op) -> Dump {
+  return Dump :: { module, builder: StringBuilder::new() }
+}
+
+pub fn Dump::funcs(self: Dump) -> Array[Op] {
+  let bb = self.module.region().block();
+  let result = [];
+  for op in bb {
+    if (isa[FuncOp](op)) {
+      result.push(op);
+    }
+  }
+  return result;
+}
+pub fn Dump::globals(self: Dump) -> Array[Op] {
+  let bb = self.module.region().block();
+  let result = [];
+  for op in bb {
+    if (isa[GlobalOp](op)) {
+      result.push(op);
+    }
+  }
+  return result;
+}
+
 pub(all) struct Flatten {
   mut module: Op
 }

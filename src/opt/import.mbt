@@ -1,7 +1,7 @@
 typealias @utils.(Config, Map)
 typealias @ir.(Op, Builder, Block, Region, Type, OpKind)
 
-fnalias @utils.(die)
+fnalias @utils.(die, reg)
 
 // Import variables.
 let config: Config = @utils.config;

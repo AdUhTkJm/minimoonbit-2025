@@ -12,7 +12,6 @@ fn compile(filename: String) -> Unit {
   let module = cg.build(ast);
   let pm = opt(module);
   pm.run();
-  println(module);
 }
 
 test {

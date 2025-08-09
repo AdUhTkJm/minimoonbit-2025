@@ -76,7 +76,8 @@ if [[ -n $testcase ]]; then
   if [[ -n $after ]]; then
     after_args=(-p "$after")
   fi
-  moon run src/bin/main.mbt -- "$testcase" $withtype "${before_args[@]}" "${after_args[@]}" $dump_ast > $out 2> $err
+  base=$(basename $testcase .mbt)
+  moon run src/bin/main.mbt -- "$testcase" $withtype "${before_args[@]}" "${after_args[@]}" $dump_ast -o temp/$base.s > $out 2> $err
   retval=$?
 
   errpos=$(sed -En 's/.*error: .*\(character: ([0-9]+)\)/\1/p' $out)

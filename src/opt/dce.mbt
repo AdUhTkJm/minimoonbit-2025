@@ -1,5 +1,10 @@
 pub fn impure(op: Op) -> Bool {
-  return op.isAny([ReturnOp, BrOp, GotoOp, StoreOp, CallOp])
+  return op.isAny([
+    // IR ops
+    ReturnOp, BrOp, GotoOp, StoreOp, CallOp,
+    // RV ops
+    RetOp, BleOp, BltOp, BgeOp, BgtOp, BeqOp, BneOp, JOp, SwOp, SdOp, FsdOp, CallOp,
+  ])
 }
 
 pub fn Dce::run(self: Dce) -> Unit {

@@ -69,3 +69,7 @@ spilled_rs2:
 stack_offset:
   fields: Int
   format: <offset = \{$0}>
+
+size:
+  fields: Int
+  format: <size = \{$0}>

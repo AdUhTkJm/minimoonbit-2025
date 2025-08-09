@@ -64,8 +64,8 @@ fdiv
 feq
 flt
 fle
-fcvtsw
-fcvtws_rtz
+fcvtsd
+fcvtds_rtz
 fmvdx
 fmvxd
 read_reg

@@ -625,7 +625,11 @@ pub fn Regalloc::runImpl(self: Regalloc, region: Region, isLeaf: Bool) -> Unit {
   lowerBinary(BeqOp);
   lowerBinary(BltOp);
   lowerBinary(BgeOp);
-  lowerBinary(StoreOp);
+  lowerBinary(BleOp);
+  lowerBinary(BgtOp);
+  lowerBinary(SwOp);
+  lowerBinary(SdOp);
+  lowerBinary(FsdOp);
   lowerBinary(AndOp);
   lowerBinary(OrOp);
   lowerBinary(XorOp);
@@ -644,7 +648,9 @@ pub fn Regalloc::runImpl(self: Regalloc, region: Region, isLeaf: Bool) -> Unit {
   lowerBinary(SllOp);
   lowerBinary(SrlOp);
   
-  lowerUnary(LoadOp);
+  lowerUnary(LdOp);
+  lowerUnary(LwOp);
+  lowerUnary(FldOp);
   lowerUnary(AddiwOp);
   lowerUnary(AddiOp);
   lowerUnary(SlliwOp);
@@ -659,8 +665,8 @@ pub fn Regalloc::runImpl(self: Regalloc, region: Region, isLeaf: Bool) -> Unit {
   lowerUnary(AndiOp);
   lowerUnary(OriOp);
   lowerUnary(XoriOp);
-  lowerUnary(FcvtswOp);
-  lowerUnary(FcvtwsRtzOp);
+  lowerUnary(FcvtsdOp);
+  lowerUnary(FcvtdsRtzOp);
   lowerUnary(FmvdxOp);
 
   // Note that some ops are dealt with later.

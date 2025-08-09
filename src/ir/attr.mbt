@@ -17,6 +17,7 @@ pub(all) enum Attr {
   SpilledRs(Bool, Int, Op)
   SpilledRs2(Bool, Int, Op)
   StackOffset(Int)
+  Size(Int)
 }
 
 pub fn Op::getInt(self: Op) -> Int {
@@ -425,6 +426,32 @@ pub fn Op::removeStackOffset(self: Op) -> Unit {
     }
   }
 }
+
+pub fn Op::getSize(self: Op) -> Int {
+  for x in self.attrs {
+    if (x is Size(_0)) {
+      return (_0);
+    }
+  }
+  die("no attribute 'size': \{self}");
+}
+
+pub fn Op::hasSize(self: Op) -> Bool {
+  for x in self.attrs {
+    if (x is Size(_)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+pub fn Op::removeSize(self: Op) -> Unit {
+  for i, x in self.attrs {
+    if (x is Size(_)) {
+      self.attrs = self.attrs[:i].to_array() + self.attrs[i+1:].to_array();
+    }
+  }
+}
 pub impl Show for Attr with output(self, logger) {
   let str = match self {
     Int(_0) => "<\{_0}>"
@@ -443,6 +470,7 @@ pub impl Show for Attr with output(self, logger) {
     SpilledRs(_0, _1, _2) => "<rs = spilled \{_1}>"
     SpilledRs2(_0, _1, _2) => "<rs2 = spilled \{_1}>"
     StackOffset(_0) => "<offset = \{_0}>"
+    Size(_0) => "<size = \{_0}>"
   }
   logger.write_string(str);
 }

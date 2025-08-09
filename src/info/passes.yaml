@@ -1,5 +1,7 @@
 passes:
   - dce
+  - dump:
+    - builder: ["StringBuilder", "StringBuilder::new()"]
   - flatten
   - move_alloca
   - mem2reg:
@@ -20,4 +22,6 @@ pipeline:
   - mem2reg
   - dce
   - lower
+  - dce
   - regalloc
+  - dump

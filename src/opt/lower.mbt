@@ -20,30 +20,34 @@ pub fn Lower::runImpl(func: Op) -> Unit {
   // Lower loads.
   let all = func.findAll(LoadOp);
   for x in all {
+    let mut kind: OpKind = BadOp;
     if (x.ty == i32) {
-      builder.replace(x, LwOp, x.ty, x.getOperands(), attrs=x.attrs);
-      continue;
+      kind = LwOp;
+    }
+    if (x.ty == i64) {
+      kind = LdOp;
     }
     if (x.ty == f64) {
-      builder.replace(x, FldOp, x.ty, x.getOperands(), attrs=x.attrs);
-      continue;
+      kind = FldOp;
     }
-    die("unknown type \{x.ty}: \{x}")
+    builder.replace(x, kind, x.ty, x.getOperands(), attrs=[..x.attrs, Int(0)]);
   }
 
   // Lower stores.
   let all = func.findAll(StoreOp);
   for x in all {
     let ty = x.def(0).ty;
+    let mut kind: OpKind = BadOp;
     if (ty == i32) {
-      builder.replace(x, SwOp, ty, x.getOperands(), attrs=x.attrs);
-      continue;
+      kind = SwOp;
     }
-    if (ty == f64) {
-      builder.replace(x, FsdOp, ty, x.getOperands(), attrs=x.attrs);
-      continue;
+    if (x.ty == i64) {
+      kind = SdOp;
     }
-    die("unknown type \{ty}: \{x}")
+    if (x.ty == f64) {
+      kind = FsdOp;
+    }
+    builder.replace(x, kind, ty, x.getOperands(), attrs=[..x.attrs, Int(0)]);
   }
 
   // Lower return.
@@ -56,6 +60,49 @@ pub fn Lower::runImpl(func: Op) -> Unit {
     builder.setBeforeOp(x);
     let a0 = builder.create(WriteRegOp, unit, [x.def(0)], attrs=[Reg(a0)])
     builder.replace(x, RetOp, x.ty, x.getOperands(), attrs=x.attrs);
+  }
+
+  // Lower arithmetics.
+  fn lowerArithmetic(kind: OpKind, i64_: OpKind, i32_: OpKind, f64_: OpKind) {
+    let all = func.findAll(kind);
+    for x in all {
+      if (x.ty == i64) {
+        builder.replace(x, i64_, x.ty, x.getOperands(), attrs=x.attrs);
+        continue;
+      }
+      if (x.ty == i32) {
+        builder.replace(x, i32_, x.ty, x.getOperands(), attrs=x.attrs);
+        continue;
+      }
+      if (x.ty == f64) {
+        builder.replace(x, f64_, x.ty, x.getOperands(), attrs=x.attrs);
+        continue;
+      }
+      die("unknown type \{x.ty} for \{x}");
+    }
+  }
+
+  lowerArithmetic(AddOp, AddOp, AddwOp, FaddOp);
+  lowerArithmetic(SubOp, SubOp, SubwOp, FsubOp);
+  lowerArithmetic(MulOp, MulOp, MulwOp, FmulOp);
+  lowerArithmetic(DivOp, DivOp, DivwOp, FdivOp);
+  lowerArithmetic(ModOp, RemOp, RemwOp, BadOp);
+
+  // Lower branches.
+  let all = func.findAll(BrOp);
+  for op in all {
+    let cond = op.def(0);
+    match cond.kind {
+      LtOp => builder.replace(op, BltOp, op.ty, cond.getOperands(), attrs=op.attrs);
+      LeOp => builder.replace(op, BleOp, op.ty, cond.getOperands(), attrs=op.attrs);
+      EqOp => builder.replace(op, BeqOp, op.ty, cond.getOperands(), attrs=op.attrs);
+      NeOp => builder.replace(op, BneOp, op.ty, cond.getOperands(), attrs=op.attrs);
+      _ => {
+        builder.setBeforeOp(op);
+        let zero = builder.create(LiOp, i32, [], attrs=[Int(0)]);
+        builder.replace(op, BneOp, op.ty, [cond, zero], attrs=op.attrs);
+      }
+    }
   }
 
   // Lower calls.

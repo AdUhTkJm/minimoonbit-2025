@@ -37,6 +37,7 @@ pub(all) enum OpKind {
   ReturnOp
   ProceedOp
   PlaceholderOp
+  BadOp
   LiOp
   LaOp
   AddiOp
@@ -96,8 +97,8 @@ pub(all) enum OpKind {
   FeqOp
   FltOp
   FleOp
-  FcvtswOp
-  FcvtwsRtzOp
+  FcvtsdOp
+  FcvtdsRtzOp
   FmvdxOp
   FmvxdOp
   ReadRegOp
@@ -147,6 +148,7 @@ pub impl Show for OpKind with output(self, logger) {
     ReturnOp => "return"
     ProceedOp => "proceed"
     PlaceholderOp => "placeholder"
+    BadOp => "bad"
     LiOp => "li"
     LaOp => "la"
     AddiOp => "addi"
@@ -206,8 +208,8 @@ pub impl Show for OpKind with output(self, logger) {
     FeqOp => "feq"
     FltOp => "flt"
     FleOp => "fle"
-    FcvtswOp => "fcvtsw"
-    FcvtwsRtzOp => "fcvtws_rtz"
+    FcvtsdOp => "fcvtsd"
+    FcvtdsRtzOp => "fcvtds_rtz"
     FmvdxOp => "fmvdx"
     FmvxdOp => "fmvxd"
     ReadRegOp => "read_reg"

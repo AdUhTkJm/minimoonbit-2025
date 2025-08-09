@@ -1,7 +1,8 @@
 {
   "import": [
     "AdUhTkJm/minimbt/utils",
-    "AdUhTkJm/minimbt/ir"
+    "AdUhTkJm/minimbt/ir",
+    "moonbitlang/x/fs"
   ],
   "warn-list": "-2-35"
 }
