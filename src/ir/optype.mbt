@@ -22,6 +22,7 @@ pub(all) enum OpKind {
   GlobalOp
   IntOp
   DoubleOp
+  MakeArrayOp
   MakeTupleOp
   GetItemOp
   GetArgOp
@@ -107,7 +108,7 @@ pub(all) enum OpKind {
 } derive(Eq, Hash)
 
 pub impl Default for OpKind with default() {
-  return ModuleOp;
+  return BadOp;
 }
 
 pub impl Show for OpKind with output(self, logger) {
@@ -133,6 +134,7 @@ pub impl Show for OpKind with output(self, logger) {
     GlobalOp => "global"
     IntOp => "int"
     DoubleOp => "double"
+    MakeArrayOp => "make_array"
     MakeTupleOp => "make_tuple"
     GetItemOp => "get_item"
     GetArgOp => "get_arg"

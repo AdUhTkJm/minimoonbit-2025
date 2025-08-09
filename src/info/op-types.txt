@@ -19,6 +19,7 @@ get_global
 global
 int
 double
+make_array
 make_tuple
 get_item
 get_arg

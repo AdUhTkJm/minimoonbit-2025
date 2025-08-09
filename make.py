@@ -61,9 +61,9 @@ def main():
     # 重新构建
     if not no_rebuild:
         with open('src/info/op-types.txt', 'r') as f:
-            subprocess.run(['python3', 'scripts/op-type-gen.py'], stdin=f, stdout=open('src/ir/optype.mbt', 'w'))
+            subprocess.run(['python', 'scripts/op-type-gen.py'], stdin=f, stdout=open('src/ir/optype.mbt', 'w'))
         with open('src/info/attrs.yaml', 'r') as f:
-            subprocess.run(['python3', 'scripts/attr-gen.py'], stdin=f, stdout=open('src/ir/attr.mbt', 'w'))
+            subprocess.run(['python', 'scripts/attr-gen.py'], stdin=f, stdout=open('src/ir/attr.mbt', 'w'))
     
     if testcase:
         # 查找测试文件

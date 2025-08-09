@@ -145,6 +145,16 @@ pub fn Parser::primary(self: Parser) -> AST {
     True => Bool(true)
     False => Bool(false)
     Ident(x) => Var(x)
+    LBrak => {  
+      let exprs = [];
+      while (!self.check(RBrak)) {
+        exprs.push(self.expr());
+        if (!self.peek().isa(RBrak)) {
+          self.expect(Comma);
+        }
+      }
+      return Array(exprs);
+    }
     LPar => {
       if (self.check(RPar)) {
         return Unit;

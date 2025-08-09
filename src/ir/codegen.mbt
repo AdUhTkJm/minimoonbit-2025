@@ -95,6 +95,14 @@ pub fn CodeGen::stmt(self: CodeGen, x: AST, ctx~: Ctx = Load) -> Op {
       }
       return builder.create(MakeUnitOp, unit, []);
     }
+    Array(arr) => {  
+      let values = arr.map(self.stmt(_));
+      return builder.create(MakeArrayOp, self[x], values);
+    }
+    Tuple(arr) => {  
+      let values = arr.map(self.stmt(_));
+      return builder.create(MakeTupleOp, self[x], values);
+    }
     BinOp(kind, l, r) => {
       if (kind is And) {
         die("&&: NYI")
