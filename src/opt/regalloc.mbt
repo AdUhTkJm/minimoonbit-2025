@@ -262,8 +262,8 @@ pub fn Regalloc::runImpl(self: Regalloc, region: Region, isLeaf: Bool) -> Unit {
     if (!fpreg(ty) && cnt < 8) {
       op.moveToStart(entry);
       builder.setBeforeOp(op);
-      builder.creates(PlaceholderOp, unit, [ fargHolders[fcnt] ]);
-      builder.replace(op, ReadRegOp, i32, [], attrs=[Reg(argRegs[fcnt])]);
+      builder.creates(PlaceholderOp, unit, [ argHolders[cnt] ]);
+      builder.replace(op, ReadRegOp, i32, [], attrs=[Reg(argRegs[cnt])]);
       cnt += 1;
       continue;
     }
@@ -610,7 +610,7 @@ pub fn Regalloc::runImpl(self: Regalloc, region: Region, isLeaf: Bool) -> Unit {
       } else {
         op.add(SpilledRs(fpreg(v0.ty), spillOffset[v0], v0));
       }
-      let v1 = op.def(0);
+      let v1 = op.def(1);
       if (!spillOffset.contains(v1)) {
         op.add(Rs2(getReg(v1)));
       } else {

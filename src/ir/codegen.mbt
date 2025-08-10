@@ -70,8 +70,9 @@ pub fn CodeGen::new(env: TypingEnv) -> CodeGen {
     symtbl: { locals: Map::new(), globals: Map::from_array({
       "print_int": Type::func(unit, [i32]),
       "print_double": Type::func(unit, [f64]),
+      "print_endline": Type::func(unit, []),
     }.to_array()), funcs: [
-      "print_int", "print_double"
+      "print_int", "print_double", "print_endline"
     ] |> Set::from_array, builder },
     builder, env, init: Op::default()
   }
@@ -224,7 +225,11 @@ pub fn CodeGen::top(self: CodeGen, x: AST) -> Unit {
       let subgen = self.clone();
       subgen.builder.setToBlockStart(block);
       for i, x in detail.args {
-        subgen.symtbl[x.0] = subgen.builder.create(GetArgOp, cvt(x.1).ptr(), [], attrs=[Int(i)]);
+        let ty = cvt(x.1);
+        let getarg = subgen.builder.create(GetArgOp, ty, [], attrs=[Int(i)]);
+        let alloca = subgen.builder.create(AllocaOp, ty.ptr(), []);
+        subgen.symtbl[x.0] = alloca;
+        subgen.builder.creates(StoreOp, unit, [getarg, alloca]);
       }
       let last = subgen.stmt(detail.body);
       subgen.builder.creates(ReturnOp, unit, [last]);

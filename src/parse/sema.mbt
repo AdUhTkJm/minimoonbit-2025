@@ -101,6 +101,7 @@ pub fn TypingEnv::new() -> TypingEnv {
   // Add predefined functions.
   env["print_int"] = Function(Unit, [Int])
   env["print_double"] = Function(Unit, [Double])
+  env["print_endline"] = Function(Unit, [])
   return env;
 }
 

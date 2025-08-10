@@ -8,6 +8,9 @@ void minimbt_print_double(double v) {
    printf("%f", v);
 }
 
+void minimbt_print_endline() {
+   puts("\n");
+}
 
 void minimbt_main();
 int main() {

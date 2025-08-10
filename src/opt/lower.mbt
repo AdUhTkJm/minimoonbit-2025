@@ -149,7 +149,7 @@ pub fn Lower::runImpl(func: Op) -> Unit {
     }
 
     let mut name = op.getName();
-    if (["print_int", "print_double"].contains(name)) {
+    if (["print_int", "print_double", "print_endline"].contains(name)) {
       name = "minimbt_\{name}"
     }
     builder.creates(CallOp, unit, argsNew, attrs=[

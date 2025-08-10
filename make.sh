@@ -33,6 +33,8 @@ while [[ $# -gt 0 ]]; do
     rebuild=1; shift 1;;
   -w|--with-type)
     withtype="--types"; shift 1;;
+  -n|--no-run)
+    norun=1; shift 1;;
   *) echo "unknown option $1"; exit 1;;
   esac
 done
@@ -116,7 +118,7 @@ if [[ -n $testcase ]]; then
   if [[ $retval -ne 0 ]]; then
     echo "panicked."
     cat $err
-  else
+  elif [[ -z $norun ]]; then
     $gcc -static temp/$base.s test/mbtlib.c -o temp/$base
     if [[ -n $input ]]; then
       $qemu temp/$base < $input

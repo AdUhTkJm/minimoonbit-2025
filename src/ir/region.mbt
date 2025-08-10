@@ -234,13 +234,13 @@ pub fn Region::updateLiveness(self: Region) -> Unit {
   while (changed) {
     changed = false;
     for bb in self.bbs {
-      let liveinOld = bb.livein;
+      let liveinOld = bb.livein.iter() |> Set::from_iter();
 
       // LiveOut(B) = \bigcup_{S\in succ(B)} (LiveIn(S) - PhiDefs(S)) \cup PhiUses(B)
       // Here PhiUses(B) means the set of variables used in Phi nodes of S that come from B.
-      let liveout: Set[Op] = Set::new();
+      let mut liveout: Set[Op] = Set::new();
       for succ in bb.succs {
-        let liveout = succ.livein.difference(phis[succ]);
+        liveout = liveout.union(succ.livein.difference(phis[succ]));
         for phi in phis[succ] {
           let ops = phi.getOperands();
           let bbs = phi.getFrom();
