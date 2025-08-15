@@ -35,6 +35,8 @@ while [[ $# -gt 0 ]]; do
     withtype="--types"; shift 1;;
   -n|--no-run)
     norun=1; shift 1;;
+  -s|--submit)
+    git archive -o target/submit.zip HEAD; exit 1;;
   *) echo "unknown option $1"; exit 1;;
   esac
 done

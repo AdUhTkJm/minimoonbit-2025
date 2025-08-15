@@ -134,6 +134,25 @@ pub fn CodeGen::stmt(self: CodeGen, x: AST, ctx~: Ctx = Load) -> Op {
       builder.creates(StoreOp, unit, [value, addr]);
       return builder.create(MakeUnitOp, unit, []);
     }
+    Fn({ args, retTy: _, name, body }) => {
+      let f = builder.create(FuncOp, unit, [], attrs=[ArgCount(args.length()), Name(name)]);
+      let region = f.appendRegion();
+      let block = region.appendBlock();
+      self.symtbl[name] = f;
+      self.symtbl.funcs.add(name);
+      let subgen = self.clone();
+      subgen.builder.setToBlockStart(block);
+      for i, x in args {
+        let ty = cvt(x.1);
+        let getarg = subgen.builder.create(GetArgOp, ty, [], attrs=[Int(i)]);
+        let alloca = subgen.builder.create(AllocaOp, ty.ptr(), []);
+        subgen.symtbl[x.0] = alloca;
+        subgen.builder.creates(StoreOp, unit, [getarg, alloca]);
+      }
+      let last = subgen.stmt(body);
+      subgen.builder.creates(ReturnOp, unit, [last]);
+      return builder.create(MakeUnitOp, unit, []);
+    }
     Call(func, args) => {
       let func = self.stmt(func);
       let args = args.map(self.stmt(_));
@@ -216,22 +235,22 @@ pub fn CodeGen::stmt(self: CodeGen, x: AST, ctx~: Ctx = Load) -> Op {
 pub fn CodeGen::top(self: CodeGen, x: AST) -> Unit {
   let builder = self.builder;
   match x {
-    Fn(detail) => {
-      let f = builder.create(FuncOp, unit, [], attrs=[ArgCount(detail.args.length()), Name(detail.name)]);
+    Fn({ args, retTy, name, body }) => {
+      let f = builder.create(FuncOp, unit, [], attrs=[ArgCount(args.length()), Name(name)]);
       let region = f.appendRegion();
       let block = region.appendBlock();
-      self.symtbl.globals[detail.name] = cvt(Function(detail.retTy, detail.args.map((x) => x.1)));
-      self.symtbl.funcs.add(detail.name);
+      self.symtbl.globals[name] = cvt(Function(retTy, args.map((x) => x.1)));
+      self.symtbl.funcs.add(name);
       let subgen = self.clone();
       subgen.builder.setToBlockStart(block);
-      for i, x in detail.args {
+      for i, x in args {
         let ty = cvt(x.1);
         let getarg = subgen.builder.create(GetArgOp, ty, [], attrs=[Int(i)]);
         let alloca = subgen.builder.create(AllocaOp, ty.ptr(), []);
         subgen.symtbl[x.0] = alloca;
         subgen.builder.creates(StoreOp, unit, [getarg, alloca]);
       }
-      let last = subgen.stmt(detail.body);
+      let last = subgen.stmt(body);
       subgen.builder.creates(ReturnOp, unit, [last]);
     }
     Let({ name, init, ty }) => {

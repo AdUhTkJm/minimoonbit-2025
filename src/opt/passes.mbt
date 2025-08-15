@@ -38,6 +38,43 @@ pub fn Dce::globals(self: Dce) -> Array[Op] {
   return result;
 }
 
+pub(all) struct Disclosure {
+  mut module: Op
+}
+
+pub impl Pass for Disclosure with name(_self) {
+  return "disclosure";
+}
+
+pub impl Pass for Disclosure with operate(self) {
+  Disclosure::run(self);
+}
+
+pub fn create_disclosure(module: Op) -> Disclosure {
+  return Disclosure :: { module }
+}
+
+pub fn Disclosure::funcs(self: Disclosure) -> Array[Op] {
+  let bb = self.module.region().block();
+  let result = [];
+  for op in bb {
+    if (isa[FuncOp](op)) {
+      result.push(op);
+    }
+  }
+  return result;
+}
+pub fn Disclosure::globals(self: Disclosure) -> Array[Op] {
+  let bb = self.module.region().block();
+  let result = [];
+  for op in bb {
+    if (isa[GlobalOp](op)) {
+      result.push(op);
+    }
+  }
+  return result;
+}
+
 pub(all) struct Dump {
   mut module: Op
   mut builder: StringBuilder
@@ -113,43 +150,6 @@ pub fn Flatten::globals(self: Flatten) -> Array[Op] {
   return result;
 }
 
-pub(all) struct MoveAlloca {
-  mut module: Op
-}
-
-pub impl Pass for MoveAlloca with name(_self) {
-  return "move-alloca";
-}
-
-pub impl Pass for MoveAlloca with operate(self) {
-  MoveAlloca::run(self);
-}
-
-pub fn create_move_alloca(module: Op) -> MoveAlloca {
-  return MoveAlloca :: { module }
-}
-
-pub fn MoveAlloca::funcs(self: MoveAlloca) -> Array[Op] {
-  let bb = self.module.region().block();
-  let result = [];
-  for op in bb {
-    if (isa[FuncOp](op)) {
-      result.push(op);
-    }
-  }
-  return result;
-}
-pub fn MoveAlloca::globals(self: MoveAlloca) -> Array[Op] {
-  let bb = self.module.region().block();
-  let result = [];
-  for op in bb {
-    if (isa[GlobalOp](op)) {
-      result.push(op);
-    }
-  }
-  return result;
-}
-
 pub(all) struct Mem2Reg {
   mut module: Op
   mut visited: Set[Block]
@@ -181,6 +181,43 @@ pub fn Mem2Reg::funcs(self: Mem2Reg) -> Array[Op] {
   return result;
 }
 pub fn Mem2Reg::globals(self: Mem2Reg) -> Array[Op] {
+  let bb = self.module.region().block();
+  let result = [];
+  for op in bb {
+    if (isa[GlobalOp](op)) {
+      result.push(op);
+    }
+  }
+  return result;
+}
+
+pub(all) struct MoveAlloca {
+  mut module: Op
+}
+
+pub impl Pass for MoveAlloca with name(_self) {
+  return "move-alloca";
+}
+
+pub impl Pass for MoveAlloca with operate(self) {
+  MoveAlloca::run(self);
+}
+
+pub fn create_move_alloca(module: Op) -> MoveAlloca {
+  return MoveAlloca :: { module }
+}
+
+pub fn MoveAlloca::funcs(self: MoveAlloca) -> Array[Op] {
+  let bb = self.module.region().block();
+  let result = [];
+  for op in bb {
+    if (isa[FuncOp](op)) {
+      result.push(op);
+    }
+  }
+  return result;
+}
+pub fn MoveAlloca::globals(self: MoveAlloca) -> Array[Op] {
   let bb = self.module.region().block();
   let result = [];
   for op in bb {

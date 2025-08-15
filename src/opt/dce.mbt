@@ -3,7 +3,7 @@ pub fn impure(op: Op) -> Bool {
     // IR ops
     ReturnOp, BrOp, GotoOp, StoreOp, CallOp,
     // RV ops
-    RetOp, BleOp, BltOp, BgeOp, BgtOp, BeqOp, BneOp, JOp, SwOp, SdOp, FsdOp, CallOp,
+    RetOp, BleOp, BltOp, BgeOp, BgtOp, BeqOp, BneOp, JOp, SwOp, SdOp, FsdOp, CallOp, WriteRegOp,
   ])
 }
 

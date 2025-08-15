@@ -78,6 +78,9 @@ pub fn Lexer::next(self: Lexer) -> Token {
       if (self.check("=")) {
         return Eq;
       }
+      if (self.check(">")) {
+        return Arrrow;
+      }
       return Assign;
     }
     '!' => {

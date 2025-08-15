@@ -6,6 +6,7 @@ pub(all) enum Type {
   Unresolved(String)
   Weak(Int)
   Function(Type, Array[Type])
+  Tuple(Array[Type])
 } derive(Show, Hash, Eq)
 
 pub impl Default for Type with default() {

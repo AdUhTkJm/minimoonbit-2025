@@ -1,14 +1,15 @@
 passes:
   - dce
+  - disclosure
   - dump:
     - builder: ["StringBuilder", "StringBuilder::new()"]
   - flatten
-  - move_alloca
   - mem2reg:
     - visited: ["Set[Block]", "Set::new()"]
     - converted: ["Set[Op]", "Set::new()"]
     - domtree: ["Map[Block, Array[Block]]", "Map::new()"]
     - phiFrom: ["Map[Op, Op]", "Map::new()"]
+  - move_alloca
   - lower
   - regalloc:
     - usedRegisters: ["Map[Op, Set[Int]]", "Map::new()"]
@@ -17,6 +18,7 @@ passes:
 
 pipeline:
   - move_alloca
+  - disclosure
   - resolve_call
   - flatten
   - mem2reg

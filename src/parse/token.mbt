@@ -21,7 +21,7 @@ pub(all) enum Token {
 
   // Punctuation
   LPar; RPar; LBrak; RBrak; LBrace; RBrace
-  Arrow; Colon; Semicolon; Comma; Dot
+  Arrow; Colon; Semicolon; Comma; Dot; Arrrow // =>
 
   // Special
   EOF

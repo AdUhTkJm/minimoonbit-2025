@@ -54,13 +54,13 @@ pub fn Lower::runImpl(func: Op) -> Unit {
   let all = func.findAll(ReturnOp);
   for x in all {
     if (x.getOperandCount() == 0) {
-      builder.replace(x, RetOp, x.ty, x.getOperands(), attrs=x.attrs);
+      builder.replace(x, RetOp, x.ty, [], attrs=x.attrs);
       continue;
     }
 
     builder.setBeforeOp(x);
     let a0 = builder.create(WriteRegOp, unit, [x.def(0)], attrs=[Reg(a0)])
-    builder.replace(x, RetOp, x.ty, x.getOperands(), attrs=x.attrs);
+    builder.replace(x, RetOp, x.ty, [], attrs=x.attrs);
   }
 
   // Lower arithmetics.

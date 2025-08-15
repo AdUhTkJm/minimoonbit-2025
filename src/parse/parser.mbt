@@ -101,7 +101,20 @@ pub fn Parser::base_type(self: Parser) -> Type {
 }
 
 pub fn Parser::read_type(self: Parser) -> Type {
-  // TODO: more types
+  if (self.check(LPar)) {
+    let tys = [];
+    while (!self.check(RPar)) {
+      tys.push(self.read_type());
+      if (!self.peek().isa(RPar)) {
+        self.expect(Comma);
+      }
+    }
+    if (self.check(Arrow)) {
+      let ret = self.read_type();
+      return Function(ret, tys);
+    }
+    return Tuple(tys);
+  }
   let ty = self.base_type();
   return ty;
 }
