@@ -1,6 +1,7 @@
 passes:
   - dce
-  - disclosure
+  - disclosure:
+    - count: ["Int", "0"]
   - dump:
     - builder: ["StringBuilder", "StringBuilder::new()"]
   - flatten

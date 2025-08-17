@@ -126,10 +126,19 @@ pub fn Op::region(self: Op) -> Region {
   return self.regions[0];
 }
 
+pub fn Op::getRegion(self: Op) -> Region {
+  return self.regions[0];
+}
+
+
 ///|
 /// Obtains the first block inside the operation's first region.
 /// 
 pub fn Op::block(self: Op) -> Block {
+  return self.region().block();
+}
+
+pub fn Op::getBlock(self: Op) -> Block {
   return self.region().block();
 }
 

@@ -6,21 +6,25 @@ while [[ $# -gt 0 ]]; do
     # Run the specified test case.
     if [[ $# -eq 1 ]]; then
       echo "usage: make.sh -t <path to test file>"
+      exit 1
     fi
     testcase=$2; shift 2;;
   -q|--print-before)
     if [[ $# -eq 1 ]]; then
       echo "usage: make.sh -q <print before>"
+      exit 1
     fi
     before=$2; shift 2;;
   -p|--print-after)
     if [[ $# -eq 1 ]]; then
       echo "usage: make.sh -p <print after>"
+      exit 1
     fi
     after=$2; shift 2;;
   -i|--input)
     if [[ $# -eq 1 ]]; then
       echo "usage: make.sh -i <input file>"
+      exit 1
     fi
     input=$2; shift 2;;
   --ast)
@@ -80,6 +84,10 @@ err=err.txt
 
 if [[ -n $testcase ]]; then
   testcase=$(find test -regextype posix-egrep -regex ".*/$testcase(\.mbt)?")
+  if [[ -z $testcase ]]; then
+    echo "file not found."
+    exit 1
+  fi
   before_args=()
   if [[ -n $before ]]; then
     before_args=(-q "$before")

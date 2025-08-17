@@ -17,7 +17,7 @@ pub(all) enum Token {
   Eq; Ne; Gt; Ge; Lt; Le;
   Add; Sub; Mul; Div; Mod; Assign;
   AddEq; SubEq; MulEq; DivEq; ModEq
-  And; Or
+  And; Or; BitAnd; BitOr
 
   // Punctuation
   LPar; RPar; LBrak; RBrak; LBrace; RBrace

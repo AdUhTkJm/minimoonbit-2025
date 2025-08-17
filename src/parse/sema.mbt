@@ -68,6 +68,12 @@ pub fn TypingEnv::dump(self: TypingEnv, ast: AST, depth: Int) -> String {
       }
       "\{self.dump(x, depth)} \{op} \{self.dump(y, depth)}";
     }
+    UnaryOp(kind, x) => {
+      let op = match kind {
+        Sub => "-";
+      }
+      "\{op}\{self.dump(x, depth)}"
+    }
     Block(arr) => {
       let indent = String::make(depth * 2 - 2, ' ');
       let content = arr.map(self.dump(_, depth + 1)).join(";\n\{indent}  ");
@@ -178,6 +184,11 @@ pub fn TypingEnv::infer(self: TypingEnv, x: AST) -> Type {
         Lt | Le | Ne | Eq => Bool
         _ => rty
       }
+      self[x] = ty;
+    }
+    UnaryOp(_kind, v) => {
+      let ty = self.infer(v);
+      guard ty is Int || ty is Double;
       self[x] = ty;
     }
     Block(arr) => {

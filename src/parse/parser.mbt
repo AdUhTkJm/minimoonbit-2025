@@ -186,6 +186,7 @@ pub fn Parser::primary(self: Parser) -> AST {
       self.expect(RPar);
       return expr;
     }
+    Sub => return UnaryOp(Sub, self.primary());
     c => self.die("unexpected primary token \{c}")
   }
 }

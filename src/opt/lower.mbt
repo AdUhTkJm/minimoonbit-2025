@@ -106,6 +106,66 @@ pub fn Lower::runImpl(func: Op) -> Unit {
     }
   }
 
+  // After this, lower remaining comparisons.
+  let all = func.findAll(LtOp);
+  for op in all {
+    if (op.ty == i32 || op.ty == i64) {
+      builder.replace(op, SltOp, op.ty, op.getOperands(), attrs=op.attrs)
+      continue;
+    }
+    if (op.ty == f64) {
+      builder.replace(op, FltOp, op.ty, op.getOperands(), attrs=op.attrs)
+      continue;
+    }
+  }
+
+  let all = func.findAll(LeOp);
+  for op in all {
+    if (op.ty == i32 || op.ty == i64) {
+      // `x <= y` is done as `!(y < x)`.
+      builder.setBeforeOp(op);
+      let nonlt = builder.create(SltOp, op.ty, [op.def(1), op.def(0)], attrs=op.attrs);
+      builder.replace(op, XoriOp, op.ty, [nonlt], attrs=[Int(1)]);
+      continue;
+    }
+    if (op.ty == f64) {
+      builder.replace(op, FleOp, op.ty, op.getOperands(), attrs=op.attrs)
+      continue;
+    }
+  }
+
+  let all = func.findAll(EqOp);
+  for op in all {
+    if (op.ty == i32 || op.ty == i64) {
+      // `x == y` is done as `!(x - y)`.
+      builder.setBeforeOp(op);
+      let sub = builder.create(SubOp, op.ty, [op.def(0), op.def(1)], attrs=op.attrs);
+      builder.replace(op, XoriOp, op.ty, [sub], attrs=[Int(1)]);
+      continue;
+    }
+    if (op.ty == f64) {
+      builder.replace(op, FeqOp, op.ty, op.getOperands(), attrs=op.attrs)
+      continue;
+    }
+  }
+
+  let all = func.findAll(NeOp);
+  for op in all {
+    if (op.ty == i32 || op.ty == i64) {
+      // `x != y` is done as `!!(x - y)`.
+      builder.setBeforeOp(op);
+      let sub = builder.create(SubOp, op.ty, [op.def(0), op.def(1)], attrs=op.attrs);
+      let neg = builder.create(XoriOp, op.ty, [sub], attrs=[Int(1)]);
+      builder.replace(op, XoriOp, op.ty, [neg], attrs=[Int(1)]);
+      continue;
+    }
+    if (op.ty == f64) {
+      let eq = builder.create(FeqOp, op.ty, op.getOperands(), attrs=op.attrs)
+      builder.replace(op, XoriOp, op.ty, [eq], attrs=[Int(1)]);
+      continue;
+    }
+  }
+
   // Lower calls.
   let all = func.findAll(CallOp);
   let regs = [a0, a1, a2, a3, a4, a5, a6, a7];

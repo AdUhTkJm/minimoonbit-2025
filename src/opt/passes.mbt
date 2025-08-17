@@ -40,6 +40,7 @@ pub fn Dce::globals(self: Dce) -> Array[Op] {
 
 pub(all) struct Disclosure {
   mut module: Op
+  mut count: Int
 }
 
 pub impl Pass for Disclosure with name(_self) {
@@ -51,7 +52,7 @@ pub impl Pass for Disclosure with operate(self) {
 }
 
 pub fn create_disclosure(module: Op) -> Disclosure {
-  return Disclosure :: { module }
+  return Disclosure :: { module, count: 0 }
 }
 
 pub fn Disclosure::funcs(self: Disclosure) -> Array[Op] {

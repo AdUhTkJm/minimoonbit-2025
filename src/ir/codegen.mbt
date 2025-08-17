@@ -106,11 +106,29 @@ pub fn CodeGen::stmt(self: CodeGen, x: AST, ctx~: Ctx = Load) -> Op {
     }
     BinOp(kind, l, r) => {
       if (kind is And) {
-        die("&&: NYI")
+        let alloca = builder.create(AllocaOp, i32.ptr(), []);
+        let l = self.stmt(l);
+        let _if = builder.create(IfOp, unit, [l]);
+        let ifso = _if.appendRegion();
+        let ifnot = _if.appendRegion();
+
+        // Emit `l ? r : 0`.
+        let point = builder.getInsertionPoint();
+        builder.setToBlockStart(ifso.appendBlock());
+        let r = self.stmt(r);
+        builder.creates(StoreOp, unit, [r, alloca]);
+
+        builder.setToBlockStart(ifnot.appendBlock());
+        let zero = builder.createInt(0);
+        builder.creates(StoreOp, unit, [zero, alloca]);
+        builder.setTo(point);
+        return builder.create(LoadOp, i32, [alloca]);
       }
+
       if (kind is Or) {
         die("||: NYI");
       }
+
       let l = self.stmt(l);
       let r = self.stmt(r);
       let (kind, ty) = match kind {
@@ -119,13 +137,22 @@ pub fn CodeGen::stmt(self: CodeGen, x: AST, ctx~: Ctx = Load) -> Op {
         Mul => (MulOp, l.ty)
         Div => (DivOp, l.ty)
         Mod => (ModOp, l.ty)
-        Ne => (NeOp, bool)
-        Eq => (EqOp, bool)
-        Lt => (LtOp, bool)
-        Le => (LeOp, bool)
+        Ne => (NeOp, i32)
+        Eq => (EqOp, i32)
+        Lt => (LtOp, i32)
+        Le => (LeOp, i32)
         _ => panic()
       }
       return builder.create(kind, ty, [l, r])
+    }
+    UnaryOp(kind, x) => {
+      let x = self.stmt(x);
+      match kind {
+        Sub => {
+          let zero = if (x.ty == i32) { builder.createInt(0) } else { builder.createDouble(0) };
+          return builder.create(SubOp, x.ty, [zero, x]);
+        }
+      }
     }
     Let({ name, init, ty }) => {
       let addr = builder.create(AllocaOp, cvt(ty).ptr(), [], attrs=[Name(name)]);

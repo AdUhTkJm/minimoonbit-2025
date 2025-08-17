@@ -138,6 +138,18 @@ pub fn Lexer::next(self: Lexer) -> Token {
       }
       return Mod;
     }
+    '&' => {
+      if (self.check("&")) {
+        return And;
+      }
+      return BitAnd;
+    }
+    '|' => {
+      if (self.check("|")) {
+        return Or;
+      }
+      return BitOr;
+    }
     '(' => LPar
     ')' => RPar
     '[' => LBrak

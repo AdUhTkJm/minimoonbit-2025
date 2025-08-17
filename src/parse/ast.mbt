@@ -22,6 +22,10 @@ pub enum BKind {
   Lt; Le; Eq; Ne
 } derive(Show, Hash, Eq)
 
+pub enum UKind {
+  Sub
+} derive(Show, Hash, Eq)
+
 pub(all) enum AST {
   Int(Int)
   Double(Double)
@@ -30,6 +34,7 @@ pub(all) enum AST {
   Fn(FnDetail)
   Var(String)
   BinOp(BKind, AST, AST)
+  UnaryOp(UKind, AST)
   Call(AST, Array[AST])
   Block(Array[AST])
   If(AST, AST, AST?)
@@ -49,6 +54,7 @@ pub fn AST::walk(self: AST, f: (AST) -> Unit) -> Unit {
     Let({ init, .. }) => init.walk(f);
     Fn({ body, .. }) => body.walk(f);
     BinOp(_, x, y) | While(x, y) | Assign(x, y) | CompoundAssign(_, x, y) => { x.walk(f); y.walk(f); }
+    UnaryOp(_, x) => x.walk(f);
     Call(call, args) => { call.walk(f); args.each(_.walk(f)); }
     Tuple(arr) | Block(arr) | Array(arr) => { arr.each(_.walk(f)); }
     If(cond, ifso, ifnot) => { cond.walk(f); ifso.walk(f); if (ifnot is Some(x)) { x.walk(f); }; }

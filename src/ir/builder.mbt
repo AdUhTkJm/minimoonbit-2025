@@ -93,3 +93,10 @@ pub fn Builder::setTo(self: Builder, point: (Node[Op], Block)) -> Unit {
   self.at = Some(point.0);
   self.bb = Some(point.1);
 }
+
+///|
+/// Shallow copies an operation, without rewiring operands.
+/// 
+pub fn Builder::copy(self: Builder, op: Op) -> Op {
+  return self.create(op.kind, op.ty, op.operands, attrs=op.attrs);
+}

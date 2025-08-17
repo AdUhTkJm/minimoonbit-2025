@@ -43,3 +43,7 @@ pub let bool: Type = Type::new("bool");
 pub fn Type::func(retTy: Type, args: Array[Type]) -> Type {
   return Type::make("func", [ retTy, ..args ]);
 }
+
+pub fn Type::tuple(args: Array[Type]) -> Type {
+  return Type::make("tuple", args);
+}
