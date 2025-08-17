@@ -46,7 +46,11 @@ pub(all) enum AST {
   Unit
   Array(Array[AST])
   Tuple(Array[AST])
-} derive(Show, Hash, Eq)
+} derive(Show, Hash)
+
+pub impl Eq for AST with op_equal(x, y) {
+  return physical_equal(x, y);
+}
 
 pub fn AST::walk(self: AST, f: (AST) -> Unit) -> Unit {
   f(self);

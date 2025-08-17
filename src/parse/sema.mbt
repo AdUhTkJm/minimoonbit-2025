@@ -188,14 +188,15 @@ pub fn TypingEnv::infer(self: TypingEnv, x: AST) -> Type {
     }
     UnaryOp(_kind, v) => {
       let ty = self.infer(v);
-      guard ty is Int || ty is Double;
       self[x] = ty;
     }
     Block(arr) => {
       let mut ty: Type = Unit;
+      let fork = self.clone();
       for x in arr {
-        ty = self.infer(x);
+        ty = fork.infer(x);
       }
+      self.join(fork);
       self[x] = ty;
     }
     Call(func, args) => {
@@ -248,17 +249,31 @@ fn TypingEnv::map(self: TypingEnv, f: (Type) -> Type) -> Unit {
 pub fn TypingEnv::solve(self: TypingEnv, x: AST) -> AST {
   // First, solve constraints.
   let solution: Map[Int, Type] = Map::new();
+  let constraints: Map[Int, Set[Type]] = Map::new();
+  for x in self.constraints {
+    let (i, ty) = x;
+    constraints[i].add(ty);
+  }
   for x in self.constraints {
     let (i, ty) = x;
     if (ty is Weak(j)) {
       // Convert all Weak(i) to Weak(j).
-      self.map((x) => if (x is Weak(z) && z == i) { Weak(j) } else { x })
-    } else {
-      solution[i] = ty;
+      self.map((x) => if (x is Weak(z) && z == i) { Weak(j) } else { x });
+      constraints[j] = constraints[j].union(constraints[i]);
     }
   }
+  for k, v in constraints {
+    let able = v.iter().filter((x) => !(x is Weak(_))).to_array();
+    if (able.length() > 1) {
+      die("conflicting: \{able}");
+    }
+    solution[k] = able[0];
+  }
+
   // Then map the solutions.
-  let mapper = (x) => if (x is Weak(z) && solution.contains(z)) { solution[z] } else { x };
+  let mapper = (x) => if (x is Weak(z)) {
+    if (solution.contains(z)) { solution[z] } else { Unit }
+  } else { x };
   self.map(mapper);
   
   x.walk((x) => match x {
