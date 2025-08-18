@@ -104,6 +104,7 @@ pub fn CodeGen::stmt(self: CodeGen, x: AST, ctx~: Ctx = Load) -> Op {
       let values = arr.map(self.stmt(_));
       return builder.create(MakeTupleOp, self[x], values);
     }
+    Unit => return builder.create(MakeUnitOp, unit, []);
     BinOp(kind, l, r) => {
       if (kind is And) {
         let alloca = builder.create(AllocaOp, i32.ptr(), []);
@@ -281,12 +282,13 @@ pub fn CodeGen::top(self: CodeGen, x: AST) -> Unit {
       subgen.builder.creates(ReturnOp, unit, [last]);
     }
     Let({ name, init, ty }) => {
-      let addr = builder.create(GlobalOp, cvt(ty).ptr(), [], attrs=[Name(name)]);
+      builder.creates(GlobalOp, cvt(ty).ptr(), [], attrs=[Name(name)]);
       self.symtbl.globals[name] = ty |> cvt;
       let point = builder.getInsertionPoint();
       builder.setToBlockEnd(self.init.block());
       let value = self.stmt(init);
-      builder.creates(StoreOp, unit, [value, addr]);
+      let getglobal = builder.create(GetGlobalOp, cvt(ty).ptr(), [], attrs=[Name(name)]);
+      builder.creates(StoreOp, unit, [value, getglobal]);
       builder.setTo(point);
     }
     _ => die("unknown toplevel: \{x}")

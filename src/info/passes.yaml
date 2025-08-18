@@ -15,10 +15,12 @@ passes:
   - regalloc:
     - usedRegisters: ["Map[Op, Set[Int]]", "Map::new()"]
     - funcMap: ["Map[String, Op]", "Map::new()"]
+  - remove_unit
   - resolve_call
 
 pipeline:
   - move_alloca
+  - remove_unit
   - disclosure
   - resolve_call
   - flatten

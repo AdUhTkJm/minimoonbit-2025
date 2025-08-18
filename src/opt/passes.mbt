@@ -305,6 +305,43 @@ pub fn Regalloc::globals(self: Regalloc) -> Array[Op] {
   return result;
 }
 
+pub(all) struct RemoveUnit {
+  mut module: Op
+}
+
+pub impl Pass for RemoveUnit with name(_self) {
+  return "remove-unit";
+}
+
+pub impl Pass for RemoveUnit with operate(self) {
+  RemoveUnit::run(self);
+}
+
+pub fn create_remove_unit(module: Op) -> RemoveUnit {
+  return RemoveUnit :: { module }
+}
+
+pub fn RemoveUnit::funcs(self: RemoveUnit) -> Array[Op] {
+  let bb = self.module.region().block();
+  let result = [];
+  for op in bb {
+    if (isa[FuncOp](op)) {
+      result.push(op);
+    }
+  }
+  return result;
+}
+pub fn RemoveUnit::globals(self: RemoveUnit) -> Array[Op] {
+  let bb = self.module.region().block();
+  let result = [];
+  for op in bb {
+    if (isa[GlobalOp](op)) {
+      result.push(op);
+    }
+  }
+  return result;
+}
+
 pub(all) struct ResolveCall {
   mut module: Op
 }

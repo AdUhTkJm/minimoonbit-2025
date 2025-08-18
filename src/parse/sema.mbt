@@ -55,6 +55,7 @@ pub fn TypingEnv::dump(self: TypingEnv, ast: AST, depth: Int) -> String {
     Double(x) => "\{x}"
     Bool(x) => "\{x}"
     Var(x) => x
+    Unit => "()"
     Let({ name, init, ty }) => "let \{name}: \{ty} = \{self.dump(init, depth)}"
     Fn({ name, args, retTy, body }) => {
       let args = args.map((x) => "\{x.0}: \{x.1}").join(", ");
@@ -161,6 +162,7 @@ pub fn TypingEnv::infer(self: TypingEnv, x: AST) -> Type {
     Int(_) => self[x] = Int
     Double(_) => self[x] = Double
     Bool(_) => self[x] = Bool
+    Unit => self[x] = Unit
     Fn({ name, args, retTy, body }) => {
       self[x] = Unit;
       self[name] = Function(retTy, args.map((x) => x.1));

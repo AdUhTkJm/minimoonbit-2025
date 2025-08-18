@@ -281,3 +281,18 @@ pub fn Op::nextOp(self: Op) -> Op {
 pub fn Op::valid(self: Op) -> Bool {
   return self.id != 0;
 }
+
+///|
+/// Gives an operation count in the regions governed by this op.
+/// 
+pub fn Op::opcount(self: Op) -> Int {
+  let mut cnt = 0;
+  for region in self.regions {
+    for bb in region {
+      for op in bb {
+        cnt += 1 + op.opcount();
+      }
+    }
+  }
+  return cnt;
+}

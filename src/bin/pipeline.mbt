@@ -3,6 +3,7 @@
 pub fn opt(module: @ir.Op) -> @opt.PassManager {
   let pm = @opt.PassManager::new(module);
   pm.add(@opt.create_move_alloca(module));
+  pm.add(@opt.create_remove_unit(module));
   pm.add(@opt.create_disclosure(module));
   pm.add(@opt.create_resolve_call(module));
   pm.add(@opt.create_flatten(module));

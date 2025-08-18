@@ -40,7 +40,7 @@ while [[ $# -gt 0 ]]; do
   -n|--no-run)
     norun=1; shift 1;;
   -s|--submit)
-    git archive -o target/submit.zip HEAD; exit 1;;
+    git archive -o target/submit.zip HEAD; echo "done."; exit 1;;
   *) echo "unknown option $1"; exit 1;;
   esac
 done

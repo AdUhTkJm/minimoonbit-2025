@@ -14,12 +14,17 @@ pub fn Dump::o(self: Dump, x: String) -> Unit {
 pub fn Dump::dump(self: Dump) -> String {
   self.o(".global minimbt_main\n");
   for func in self.funcs() {
-    let mut name = func.getName();
+    let name = func.getName();
     // Special treatment for entry point.
     if (name == "main") {
-      name = "minimbt_main";
+      self.o("minimbt_main:\n");
+      let __init = self.funcs().filter((x) => x.getName() == "__init")[0];
+      if (__init.opcount() != 1) {
+        self.o("  call __init\n");
+      }
+    } else {
+      self.o("\{name}:\n");
     }
-    self.o("\{name}:\n");
     for bb in func.region() {
       self.o(".Lbb\{bb.id}:\n");
       for op in bb {
@@ -31,8 +36,14 @@ pub fn Dump::dump(self: Dump) -> String {
     self.o("\n\n")
   }
 
-  for global in self.globals() {
-    // TODO
+  let globals = self.globals();
+  if (globals.length() >= 1) {
+    self.o("\n.bss\n");
+  }
+  // We need to handle arrays to make this work
+  for global in globals {
+    self.o(".align 4\n");
+    self.o("\{global.getName()}:\n  .space 4\n");
   }
   return self.builder.to_string();
 }
